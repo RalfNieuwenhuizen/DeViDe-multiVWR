@@ -54,34 +54,37 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         self._mgr = wx.aui.AuiManager()
         self._mgr.SetManagedWindow(self)
 
+        panel_width = 350
+        panel_height = 400
+
         self._mgr.AddPane(self._create_top_pane(), wx.aui.AuiPaneInfo().
                           Name("top").Caption("Top").
                           Left().
-                          BestSize(wx.Size(400,400)).
+                          BestSize(wx.Size(panel_width,panel_height)).
                           CloseButton(False).MaximizeButton(True).Resizable(False))
 
         self._mgr.AddPane(self._create_front_pane(), wx.aui.AuiPaneInfo().
                           Name("front").Caption("Front").
                           Left().
-                          BestSize(wx.Size(400,400)).
+                          BestSize(wx.Size(panel_width,panel_height)).
                           CloseButton(False).MaximizeButton(True).Resizable(False))
 
         self._mgr.AddPane(self._create_side_pane(), wx.aui.AuiPaneInfo().
                           Name("side").Caption("Side").
                           Center().
-                          BestSize(wx.Size(400,400)).
+                          BestSize(wx.Size(panel_width,panel_height)).
                           CloseButton(False).MaximizeButton(True).Resizable(False))
 
         self._mgr.AddPane(self._create_3D_pane(), wx.aui.AuiPaneInfo().
                           Name("view3d").Caption("3D").
                           Center().
-                          BestSize(wx.Size(400,400)).
+                          BestSize(wx.Size(panel_width,panel_height)).
                           CloseButton(False).MaximizeButton(True).Resizable(False))
 
         self._mgr.AddPane(self._create_controls_pane(), wx.aui.AuiPaneInfo().
                           Name("controls").Caption("Controls").
                           Right().
-                          BestSize(wx.Size(200,800)).
+                          BestSize(wx.Size(300,800)).
                           CloseButton(False).MaximizeButton(False).Resizable(False))
 
         self.SetMinSize(wx.Size(400, 300))
@@ -120,41 +123,69 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         setting default or calculated values)
         """
         panel = wx.Panel(self, -1)
-
-        self.upper_slider = wx.Slider(panel, -1, -950, -1100, -900, (0, 0), (300, 50),wx.SL_HORIZONTAL | wx.SL_AUTOTICKS | wx.SL_LABELS)
-        self.label = wx.StaticText(panel, -1, "Emfysema Threshold (HU)" , wx.Point(0, 0))
-        self.label.SetForegroundColour(wx.Colour(127,0,255))
-        self.lower_slider = wx.Slider(panel, -1, -970, -1100, -900, (0, 0), (300, 50),wx.SL_HORIZONTAL | wx.SL_AUTOTICKS | wx.SL_LABELS)
-        self.label2 = wx.StaticText(panel, -1, "Severe Emfysema Threshold (HU)" , wx.Point(0, 0))
-        self.label2.SetForegroundColour(wx.Colour(255,0,0))
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(self.upper_slider)
-        sizer.Add(self.label)
 
-        sizer2 = wx.BoxSizer(wx.VERTICAL)
-        sizer2.Add(self.lower_slider)
-        sizer2.Add(self.label2)
+        #FILE
+        file_box = wx.BoxSizer(wx.VERTICAL)
+        
+        file_label = wx.StaticText(panel, -1, "DICOM FILE" , wx.Point(0, 0))
+        file_box.Add(file_label)
 
-        self.button5 = wx.Button(panel, -1, "-950 / -970 HU",pos=(8, 8), size=(175, 28))
-        self.button6 = wx.Button(panel, -1, "12% / 10% Lowest HU",pos=(8, 8), size=(175, 28))
-        button_sizer = wx.BoxSizer(wx.VERTICAL)
-        button_sizer.Add(self.button5)
-        button_sizer.Add(self.button6)
+        #SELECTION
+        selection_box = wx.BoxSizer(wx.VERTICAL)
+        
+        selection_label = wx.StaticText(panel, -1, "Selection:" , wx.Point(0, 0))
+        selection_box.Add(selection_label)
+
+        color_label = wx.StaticText(panel, -1, "Color" , wx.Point(0, 0))
+        selection_box.Add(color_label)
+
+        #tolerance
+        tolerance_label = wx.StaticText(panel, -1, "Tolerance" , wx.Point(0, 0))
+        selection_box.Add(tolerance_label)
+
+        self.lower_slider = wx.Slider(panel, -1, 30, 0, 100, (0, 0), (200, 50),wx.SL_HORIZONTAL | wx.SL_AUTOTICKS | wx.SL_LABELS)
+        lower_label = wx.StaticText(panel, -1, "Lower" , wx.Point(0, 0))
+        self.upper_slider = wx.Slider(panel, -1, 45, 0, 100  , (0, 0), (200, 50),wx.SL_HORIZONTAL | wx.SL_AUTOTICKS | wx.SL_LABELS)
+        upper_label = wx.StaticText(panel, -1, "Upper" , wx.Point(0, 0))
+
+        selection_box.Add(lower_label)
+        selection_box.Add(self.lower_slider)
+        selection_box.Add(upper_label)
+        selection_box.Add(self.upper_slider)
 
 
-        slider_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        slider_sizer.Add(sizer)
-        slider_sizer.Add(sizer2)
-        slider_sizer.Add(button_sizer)
+        #continuous_label = wx.StaticText(panel, -1, "Continuous" , wx.Point(0, 0))
+        continuous_check = wx.CheckBox(panel, -1, "Continuous" , wx.Point(0, 0))
+        #selection_box.Add(continuous_label)
+        selection_box.Add(continuous_check)
 
-        sizer1 = wx.BoxSizer(wx.VERTICAL)
-        sizer1.Add(slider_sizer)
+        #UNSELECTED
+        unselected_box = wx.BoxSizer(wx.VERTICAL)
+        
+        unselected_label = wx.StaticText(panel, -1, "Unselected:" , wx.Point(0, 0))
+        unselected_box.Add(unselected_label)
 
-        tl_sizer = wx.BoxSizer(wx.VERTICAL)
-        tl_sizer.Add(sizer1, 1, wx.ALL|wx.EXPAND, 7)
+        self.transparency_slider = wx.Slider(panel, -1, 50, 0, 100, (0, 0), (200, 50),wx.SL_HORIZONTAL | wx.SL_AUTOTICKS | wx.SL_LABELS)
+        transparency_label = wx.StaticText(panel, -1, "Transparency" , wx.Point(0, 0))
 
-        panel.SetSizer(tl_sizer)
-        tl_sizer.Fit(panel)
+        unselected_box.Add(transparency_label)
+        unselected_box.Add(self.transparency_slider)
+
+        #transparencybydistance_label = wx.StaticText(panel, -1, "Transparency by distance" , wx.Point(0, 0))
+        transparencybydistance_check = wx.CheckBox(panel, -1, "Transparency by distance" , wx.Point(0, 0))
+        #unselected_box.Add(transparencybydistance_label)
+        unselected_box.Add(transparencybydistance_check)
+
+  #      self.button5 = wx.Button(panel, -1, "-950 / -970 HU",pos=(8, 8), size=(175, 28))
+  #      self.button6 = wx.Button(panel, -1, "12% / 10% Lowest HU",pos=(8, 8), size=(175, 28))
+  
+        sizer.Add(file_box, 1, wx.ALL|wx.EXPAND, 7)
+        sizer.Add(selection_box, 3, wx.ALL|wx.EXPAND, 7)
+        sizer.Add(unselected_box, 3, wx.ALL|wx.EXPAND, 7)
+
+        panel.SetSizer(sizer)
+        sizer.Fit(panel)
 
         return panel
 

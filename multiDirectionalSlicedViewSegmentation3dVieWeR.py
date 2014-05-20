@@ -440,10 +440,10 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                self._handler_button3)
         self._view_frame.button4.Bind(wx.EVT_BUTTON,
                self._handler_button4)
-        self._view_frame.button5.Bind(wx.EVT_BUTTON,
-               self._handler_button5)
-        self._view_frame.button6.Bind(wx.EVT_BUTTON,
-               self._handler_button6)
+        # self._view_frame.button5.Bind(wx.EVT_BUTTON,
+        #        self._handler_button5)
+        # self._view_frame.button6.Bind(wx.EVT_BUTTON,
+        #        self._handler_button6)
 
         self._view_frame.upper_slider.Bind(wx.EVT_SCROLL_CHANGED, self._handler_slider1)
         self._view_frame.lower_slider.Bind(wx.EVT_SCROLL_CHANGED, self._handler_slider2)
