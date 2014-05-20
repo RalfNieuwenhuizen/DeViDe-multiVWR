@@ -1,0 +1,1 @@
+"C:\Program Files\DeVIDE-RE\dre.cmd" devide --extra-module-paths "C:\Users\Gebruiker\Dropbox\TUDelft\Master\IN4307 - Medical Visualization\DeViDe-multiVWR"
