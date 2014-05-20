@@ -39,66 +39,50 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         wx.Frame.__init__(self, parent, id=id, title=title, 
                 pos=wx.DefaultPosition, size=(1000,875), name=name)
 
-
-        self.menubar = wx.MenuBar()
-        self.SetMenuBar(self.menubar)
-
+        # TODO remove?
         file_menu = wx.Menu()
         self.id_file_open = wx.NewId()
         self.id_mask_open = wx.NewId()
-        file_menu.Append(self.id_file_open, "&Open Volume\tCtrl-O",
-                "Open a volume", wx.ITEM_NORMAL)
-        file_menu.Append(self.id_mask_open, "&Open Mask\tCtrl-M",
-                "Open a mask", wx.ITEM_NORMAL)
         self.id_mask_save = wx.NewId()
-        file_menu.Append(self.id_mask_save, "&Save\tCtrl-S",
-                "Save file", wx.ITEM_NORMAL)
 
-        self.menubar.Append(file_menu, "&File")
-       
-
-        views_menu = wx.Menu()
+        # TODO remove?
         views_default_id = wx.NewId()
-        views_menu.Append(views_default_id, "&Default\tCtrl-0",
-                         "Activate default view layout.", wx.ITEM_NORMAL)
-                
-
         views_max_image_id = wx.NewId()
-        views_menu.Append(views_max_image_id, "&Maximum image size\tCtrl-1",
-                         "Activate maximum image view size layout.", 
-                         wx.ITEM_NORMAL)
-
-
-        self.menubar.Append(views_menu, "&Views")
 
 
         # tell FrameManager to manage this frame        
         self._mgr = wx.aui.AuiManager()
         self._mgr.SetManagedWindow(self)
 
-        self._mgr.AddPane(self._create_rwi_pane(), wx.aui.AuiPaneInfo().
-                          Name("rwi").Caption("3D Renderer").
+        self._mgr.AddPane(self._create_top_pane(), wx.aui.AuiPaneInfo().
+                          Name("top").Caption("Top").
+                          Left().
+                          BestSize(wx.Size(400,400)).
+                          CloseButton(False).MaximizeButton(True).Resizable(False))
+
+        self._mgr.AddPane(self._create_front_pane(), wx.aui.AuiPaneInfo().
+                          Name("front").Caption("Front").
+                          Left().
+                          BestSize(wx.Size(400,400)).
+                          CloseButton(False).MaximizeButton(True).Resizable(False))
+
+        self._mgr.AddPane(self._create_side_pane(), wx.aui.AuiPaneInfo().
+                          Name("side").Caption("Side").
                           Center().
-                          BestSize(wx.Size(600,800)).
-                          CloseButton(False).MaximizeButton(True))
+                          BestSize(wx.Size(400,400)).
+                          CloseButton(False).MaximizeButton(True).Resizable(False))
+
+        self._mgr.AddPane(self._create_3D_pane(), wx.aui.AuiPaneInfo().
+                          Name("view3d").Caption("3D").
+                          Center().
+                          BestSize(wx.Size(400,400)).
+                          CloseButton(False).MaximizeButton(True).Resizable(False))
 
         self._mgr.AddPane(self._create_controls_pane(), wx.aui.AuiPaneInfo().
                           Name("controls").Caption("Controls").
-                          Top().
-                          BestSize(wx.Size(1000,75)).
-                          CloseButton(False).MaximizeButton(True))
-
-        self._mgr.AddPane(self._create_overlay_slices_pane(), wx.aui.AuiPaneInfo().
-                          Name("overlay").Caption("Emphysema Overlay").
                           Right().
-                          BestSize(wx.Size(400,400)).
-                          CloseButton(False).MaximizeButton(True))
-
-        self._mgr.AddPane(self._create_original_slices_pane(), wx.aui.AuiPaneInfo().
-                          Name("original").Caption("Original Scan").
-                          Right().
-                          BestSize(wx.Size(400,400)).
-                          CloseButton(False).MaximizeButton(True))
+                          BestSize(wx.Size(200,800)).
+                          CloseButton(False).MaximizeButton(False).Resizable(False))
 
         self.SetMinSize(wx.Size(400, 300))
 
@@ -106,16 +90,6 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         # visible
         self._perspectives = {} 
         self._perspectives['default'] = self._mgr.SavePerspective()
-
-        # then we hide all of the panes except the renderer
-        self._mgr.GetPane("controls").Hide()
-        self._mgr.GetPane("overlay").Hide()
-        self._mgr.GetPane("original").Hide()
-        # save the perspective again
-        self._perspectives['max_image'] = self._mgr.SavePerspective()
-
-        # and put back the default perspective / view
-        self._mgr.LoadPerspective(self._perspectives['default'])
 
         # finally tell the AUI manager to do everything that we've
         # asked
@@ -131,7 +105,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
                 id=views_max_image_id)
                 
         self.CreateStatusBar()
-        self.SetStatusText("This is the statusbar ^^")
+        self.SetStatusText("multiDirectionalSlicedViewSegmentation3dVieWeR loaded")
 
 
 
@@ -140,30 +114,6 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         """Selfdestruct :)
         """
         self.Destroy()
-
-    def _create_rwi_pane(self):
-        """Create a RenderWindowInteractor panel
-        """
-        panel = wx.Panel(self, -1)
-
-        self.rwi = wxVTKRenderWindowInteractor(panel, -1, (600,800))
-        self.button1 = wx.Button(panel, -1, "Reset Camera")
-        self.button2 = wx.Button(panel, -1, "Reset All")
-        button_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        button_sizer.Add(self.button1)
-        button_sizer.Add(self.button2)
-
-        sizer1 = wx.BoxSizer(wx.VERTICAL)
-        sizer1.Add(self.rwi, 1, wx.EXPAND|wx.BOTTOM, 7)
-        sizer1.Add(button_sizer)
-
-        tl_sizer = wx.BoxSizer(wx.VERTICAL)
-        tl_sizer.Add(sizer1, 1, wx.ALL|wx.EXPAND, 7)
-
-        panel.SetSizer(tl_sizer)
-        tl_sizer.Fit(panel)
-
-        return panel
 
     def _create_controls_pane(self):
         """Create a pane for the controls (containing the threshold sliders and buttons for 
@@ -208,12 +158,12 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
 
         return panel
 
-    def _create_overlay_slices_pane(self):
+    def _create_top_pane(self):
         """Create a RenderWindowInteractor for the original data and added emphysema overlay
         """
         panel = wx.Panel(self, -1)
 
-        self.overlay = wxVTKRenderWindowInteractor(panel, -1, (400,400))
+        self.top = wxVTKRenderWindowInteractor(panel, -1, (400,400))
 
         self.button3 = wx.Button(panel, -1, "Reset Camera")
         self.button4 = wx.Button(panel, -1, "Reset All")
@@ -222,8 +172,6 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         button_sizer.Add(self.button4)
 
         sizer1 = wx.BoxSizer(wx.VERTICAL)
-        sizer1.Add(self.overlay, 1, wx.EXPAND|wx.BOTTOM, 7)
-        sizer1.Add(button_sizer)
 
         tl_sizer = wx.BoxSizer(wx.VERTICAL)
         tl_sizer.Add(sizer1, 1, wx.ALL|wx.EXPAND, 7)
@@ -233,16 +181,66 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
 
         return panel
 
-    def _create_original_slices_pane(self):
+    def _create_front_pane(self):
         """Create a RenderWindowInteractor for the original data and added emphysema overlay
         """
         panel = wx.Panel(self, -1)
 
-        self.original = wxVTKRenderWindowInteractor(panel, -1, (400,400))
+        self.front = wxVTKRenderWindowInteractor(panel, -1, (400,400))
+
+        self.button3 = wx.Button(panel, -1, "Reset Camera")
+        self.button4 = wx.Button(panel, -1, "Reset All")
+        button_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        button_sizer.Add(self.button3)
+        button_sizer.Add(self.button4)
 
         sizer1 = wx.BoxSizer(wx.VERTICAL)
-        sizer1.Add(self.original, 1, wx.EXPAND|wx.BOTTOM, 7)
 
+        tl_sizer = wx.BoxSizer(wx.VERTICAL)
+        tl_sizer.Add(sizer1, 1, wx.ALL|wx.EXPAND, 7)
+
+        panel.SetSizer(tl_sizer)
+        tl_sizer.Fit(panel)
+
+        return panel
+
+    def _create_side_pane(self):
+        """Create a RenderWindowInteractor for the original data and added emphysema overlay
+        """
+        panel = wx.Panel(self, -1)
+
+        self.side = wxVTKRenderWindowInteractor(panel, -1, (400,400))
+
+        self.button3 = wx.Button(panel, -1, "Reset Camera")
+        self.button4 = wx.Button(panel, -1, "Reset All")
+        button_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        button_sizer.Add(self.button3)
+        button_sizer.Add(self.button4)
+
+        sizer1 = wx.BoxSizer(wx.VERTICAL)
+
+        tl_sizer = wx.BoxSizer(wx.VERTICAL)
+        tl_sizer.Add(sizer1, 1, wx.ALL|wx.EXPAND, 7)
+
+        panel.SetSizer(tl_sizer)
+        tl_sizer.Fit(panel)
+
+        return panel
+
+    def _create_3D_pane(self):
+        """Create a RenderWindowInteractor for the original data and added emphysema overlay
+        """
+        panel = wx.Panel(self, -1)
+
+        self.view3d = wxVTKRenderWindowInteractor(panel, -1, (400,400))
+
+        self.button3 = wx.Button(panel, -1, "Reset Camera")
+        self.button4 = wx.Button(panel, -1, "Reset All")
+        button_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        button_sizer.Add(self.button3)
+        button_sizer.Add(self.button4)
+
+        sizer1 = wx.BoxSizer(wx.VERTICAL)
 
         tl_sizer = wx.BoxSizer(wx.VERTICAL)
         tl_sizer.Add(sizer1, 1, wx.ALL|wx.EXPAND, 7)
@@ -255,9 +253,10 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
     def render(self):
         """Update embedded RWI, i.e. update the image.
         """
-        self.rwi.Render()
-        self.overlay.Render()
-        self.original.Render()
+        self.view3d.Render()
+        self.front.Render()
+        self.top.Render()
+        self.side.Render()
       
     def _handler_default_view(self, event):
         """Event handler for when the user selects View | Default from

@@ -23,8 +23,8 @@ reload(multiDirectionalSlicedViewSegmentation3dVieWeRFrame)
 from module_kits.misc_kit import misc_utils
 from module_base import ModuleBase
 from module_mixins import IntrospectModuleMixin
-#from comedi_utils import CMSliceViewer
-#from comedi_utils import SyncSliceViewers
+from comedi_utils import CMSliceViewer
+from comedi_utils import SyncSliceViewers
 import module_utils
 import os
 import sys
@@ -110,7 +110,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         # the RenderWindowInteractor in the view_frame has the rest.
         self.ren = vtk.vtkRenderer()
         self.ren.SetBackground(0.5,0.5,0.5)
-        self._view_frame.rwi.GetRenderWindow().AddRenderer(self.ren)
+        self._view_frame.view3d.GetRenderWindow().AddRenderer(self.ren)
 
         self.ren.AddActor(self.contour_severe_actor)
         self.ren.AddActor(self.contour_moderate_actor)
@@ -118,15 +118,15 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
 
         self.ren2 = vtk.vtkRenderer()
         self.ren2.SetBackground(0.5,0.5,0.5)
-        self._view_frame.overlay.GetRenderWindow().AddRenderer(self.ren2)
-        self.slice_viewer1 = CMSliceViewer(self._view_frame.overlay, self.ren2)
+        self._view_frame.front.GetRenderWindow().AddRenderer(self.ren2)
+        self.slice_viewer1 = CMSliceViewer(self._view_frame.front, self.ren2)
 
         self.ren3 = vtk.vtkRenderer()
         self.ren3.SetBackground(0.5,0.5,0.5)
-        self._view_frame.original.GetRenderWindow().AddRenderer(self.ren3)
-        self.slice_viewer2 = CMSliceViewer(self._view_frame.original, self.ren3)
+        self._view_frame.top.GetRenderWindow().AddRenderer(self.ren3)
+        self.slice_viewer2 = CMSliceViewer(self._view_frame.top, self.ren3)
         
-        self.slice_viewer3 = CMSliceViewer(self._view_frame.rwi, self.ren)
+        self.slice_viewer3 = CMSliceViewer(self._view_frame.view3d, self.ren)
         
 
         self.sync = SyncSliceViewers()
@@ -168,15 +168,18 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         self.slice_viewer1.close()
         self.slice_viewer2.close()
         self.slice_viewer3.close()
-        self._view_frame.rwi.GetRenderWindow().Finalize()
-        self._view_frame.rwi.SetRenderWindow(None)
-        self._view_frame.overlay.GetRenderWindow().Finalize()
-        self._view_frame.overlay.SetRenderWindow(None)
-        self._view_frame.original.GetRenderWindow().Finalize()
-        self._view_frame.original.SetRenderWindow(None)
-        del self._view_frame.rwi
-        del self._view_frame.overlay
-        del self._view_frame.original
+        self._view_frame.view3d.GetRenderWindow().Finalize()
+        self._view_frame.view3d.SetRenderWindow(None)
+        self._view_frame.front.GetRenderWindow().Finalize()
+        self._view_frame.front.SetRenderWindow(None)
+        self._view_frame.top.GetRenderWindow().Finalize()
+        self._view_frame.top.SetRenderWindow(None)
+        self._view_frame.side.GetRenderWindow().Finalize()
+        self._view_frame.side.SetRenderWindow(None)
+        del self._view_frame.view3d
+        del self._view_frame.front
+        del self._view_frame.top
+        del self._view_frame.side
         del self.slice_viewer3
         del self.slice_viewer2
         del self.slice_viewer1
@@ -405,7 +408,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         """Save data from main renderwindow (the contour one) to a PNG-file
         """
         w2i  = vtk.vtkWindowToImageFilter()
-        w2i.SetInput(self._view_frame.rwi.GetRenderWindow()); 
+        w2i.SetInput(self._view_frame.view3d.GetRenderWindow()); 
         w2i.Update()
         writer = vtk.vtkPNGWriter()
         writer.SetInput(w2i.GetOutput())
@@ -429,10 +432,10 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         vf.Bind(wx.EVT_MENU, self._handler_file_save,
                 id = vf.id_mask_save)
 
-        self._view_frame.button1.Bind(wx.EVT_BUTTON,
-                self._handler_button1)
-        self._view_frame.button2.Bind(wx.EVT_BUTTON,
-                self._handler_button2)
+        # self._view_frame.button1.Bind(wx.EVT_BUTTON,
+        #         self._handler_button1)
+        # self._view_frame.button2.Bind(wx.EVT_BUTTON,
+        #         self._handler_button2)
         self._view_frame.button3.Bind(wx.EVT_BUTTON,
                self._handler_button3)
         self._view_frame.button4.Bind(wx.EVT_BUTTON,
