@@ -109,7 +109,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         # create the necessary VTK objects: we only need a renderer,
         # the RenderWindowInteractor in the view_frame has the rest.
         self.ren = vtk.vtkRenderer()
-        self.ren.SetBackground(0.1,0.1,0.1)
+        self.ren.SetBackground(0.62,0.62,0.62)
         self._view_frame.view3d.GetRenderWindow().AddRenderer(self.ren)
 
          # setup orientation widget stuff
@@ -148,17 +148,17 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         self.ren.AddActor(self.contour_lungedge_actor)
 
         self.ren2 = vtk.vtkRenderer()
-        self.ren2.SetBackground(0.5,0.5,0.5)
+        self.ren2.SetBackground(0.19,0.19,0.19)
         self._view_frame.front.GetRenderWindow().AddRenderer(self.ren2)
         self.slice_viewer1 = CMSliceViewer(self._view_frame.front, self.ren2)
 
         self.ren3 = vtk.vtkRenderer()
-        self.ren3.SetBackground(0.5,0.5,0.5)
+        self.ren3.SetBackground(0.19,0.19,0.19)
         self._view_frame.top.GetRenderWindow().AddRenderer(self.ren3)
         self.slice_viewer2 = CMSliceViewer(self._view_frame.top, self.ren3)
         
         self.ren4 = vtk.vtkRenderer()
-        self.ren4.SetBackground(0.5,0.5,0.5)
+        self.ren4.SetBackground(0.19,0.19,0.19)
         self._view_frame.side.GetRenderWindow().AddRenderer(self.ren4)
         self.slice_viewer3 = CMSliceViewer(self._view_frame.side, self.ren4)
         

@@ -39,6 +39,8 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         wx.Frame.__init__(self, parent, id=id, title=title, 
                 pos=wx.DefaultPosition, size=(1000,875), name=name)
 
+        self.SetBackgroundColour("#888888")
+
         views_control_sizer = wx.BoxSizer(wx.HORIZONTAL)
         views_sizer_left = wx.BoxSizer(wx.VERTICAL)
         views_sizer_right = wx.BoxSizer(wx.VERTICAL)
@@ -72,6 +74,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         setting default or calculated values)
         """
         panel = wx.Panel(self, -1)
+        panel.SetBackgroundColour('#AAAAAA') 
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.SetMinSize(wx.Size(200,600))
 
