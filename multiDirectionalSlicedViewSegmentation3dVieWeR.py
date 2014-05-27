@@ -109,7 +109,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         # create the necessary VTK objects: we only need a renderer,
         # the RenderWindowInteractor in the view_frame has the rest.
         self.ren = vtk.vtkRenderer()
-        self.ren.SetBackground(0.5,0.5,0.5)
+        self.ren.SetBackground(0.1,0.1,0.1)
         self._view_frame.view3d.GetRenderWindow().AddRenderer(self.ren)
 
         self.ren.AddActor(self.contour_severe_actor)
@@ -126,13 +126,16 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         self._view_frame.top.GetRenderWindow().AddRenderer(self.ren3)
         self.slice_viewer2 = CMSliceViewer(self._view_frame.top, self.ren3)
         
-        self.slice_viewer3 = CMSliceViewer(self._view_frame.view3d, self.ren)
+        self.ren4 = vtk.vtkRenderer()
+        self.ren4.SetBackground(0.5,0.5,0.5)
+        self._view_frame.side.GetRenderWindow().AddRenderer(self.ren4)
+        self.slice_viewer3 = CMSliceViewer(self._view_frame.side, self.ren4)
         
 
         self.sync = SyncSliceViewers()
         self.sync.add_slice_viewer(self.slice_viewer1)
         self.sync.add_slice_viewer(self.slice_viewer2)
-        self.sync.add_slice_viewer2(self.slice_viewer3)
+        self.sync.add_slice_viewer(self.slice_viewer3)
 
         # hook up all event handlers
         self._bind_events()
@@ -162,6 +165,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         self.ren.RemoveAllViewProps()
         self.ren2.RemoveAllViewProps()
         self.ren3.RemoveAllViewProps()
+        self.ren4.RemoveAllViewProps()
 
         # this finalize makes sure we don't get any strange X
         # errors when we kill the module.
@@ -436,10 +440,10 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         #         self._handler_button1)
         # self._view_frame.button2.Bind(wx.EVT_BUTTON,
         #         self._handler_button2)
-        self._view_frame.button3.Bind(wx.EVT_BUTTON,
-               self._handler_button3)
-        self._view_frame.button4.Bind(wx.EVT_BUTTON,
-               self._handler_button4)
+        # self._view_frame.button3.Bind(wx.EVT_BUTTON,
+        #        self._handler_button3)
+        # self._view_frame.button4.Bind(wx.EVT_BUTTON,
+        #        self._handler_button4)
         # self._view_frame.button5.Bind(wx.EVT_BUTTON,
         #        self._handler_button5)
         # self._view_frame.button6.Bind(wx.EVT_BUTTON,
