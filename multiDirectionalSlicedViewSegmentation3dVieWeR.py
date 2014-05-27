@@ -112,6 +112,37 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         self.ren.SetBackground(0.1,0.1,0.1)
         self._view_frame.view3d.GetRenderWindow().AddRenderer(self.ren)
 
+         # setup orientation widget stuff
+        # NB NB NB: we switch interaction with this off later
+        # (InteractiveOff()), thus disabling direct translation and
+        # scaling.  If we DON'T do this, interaction with software 
+        # raycasters are greatly slowed down.
+        self._orientation_widget = vtk.vtkOrientationMarkerWidget()
+        
+        self._annotated_cube_actor = aca = vtk.vtkAnnotatedCubeActor()
+        #aca.TextEdgesOff()
+
+        aca.GetXMinusFaceProperty().SetColor(1,0,0)
+        aca.GetXPlusFaceProperty().SetColor(1,0,0)
+        aca.GetYMinusFaceProperty().SetColor(0,1,0)
+        aca.GetYPlusFaceProperty().SetColor(0,1,0)
+        aca.GetZMinusFaceProperty().SetColor(0,0,1)
+        aca.GetZPlusFaceProperty().SetColor(0,0,1)
+        
+        self._axes_actor = vtk.vtkAxesActor()
+
+        self._orientation_widget.SetInteractor(
+            self._view_frame.view3d)
+        self._orientation_widget.SetOrientationMarker(
+            self._axes_actor)
+        self._orientation_widget.On()
+       
+        # make sure interaction is off; when on, interaction with
+        # software raycasters is greatly slowed down!
+        self._orientation_widget.InteractiveOff()
+
+
+
         self.ren.AddActor(self.contour_severe_actor)
         self.ren.AddActor(self.contour_moderate_actor)
         self.ren.AddActor(self.contour_lungedge_actor)
