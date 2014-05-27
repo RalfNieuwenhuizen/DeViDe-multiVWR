@@ -459,13 +459,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         """Bind wx events to Python callable object event handlers.
         """
 
-        vf = self._view_frame
-        vf.Bind(wx.EVT_MENU, self._handler_file_open,
-                id = vf.id_file_open)
-        vf.Bind(wx.EVT_MENU, self._handler_mask_open,
-                id = vf.id_mask_open)
-        vf.Bind(wx.EVT_MENU, self._handler_file_save,
-                id = vf.id_mask_save)
+        # vf = self._view_frame
 
         # self._view_frame.button1.Bind(wx.EVT_BUTTON,
         #         self._handler_button1)

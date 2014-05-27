@@ -39,12 +39,6 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         wx.Frame.__init__(self, parent, id=id, title=title, 
                 pos=wx.DefaultPosition, size=(1000,875), name=name)
 
-        # TODO remove?
-        file_menu = wx.Menu()
-        self.id_file_open = wx.NewId()
-        self.id_mask_open = wx.NewId()
-        self.id_mask_save = wx.NewId()
-
         views_control_sizer = wx.BoxSizer(wx.HORIZONTAL)
         views_sizer_left = wx.BoxSizer(wx.VERTICAL)
         views_sizer_right = wx.BoxSizer(wx.VERTICAL)
