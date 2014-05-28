@@ -1,1 +1,1 @@
-"C:\Program Files\DeVIDE-RE\dre.cmd" devide --extra-module-paths "C:\Users\Gebruiker\Dropbox\TUDelft\Master\IN4307 - Medical Visualization\DeViDe-multiVWR" --extra-module-paths "D:\Users\Jan-Willem\Documents\GitHub\DeViDe-multiVWR" 
+"C:\Program Files\DeVIDE-RE\dre.cmd" devide --extra-module-paths "C:\Users\Gebruiker\Dropbox\TUDelft\Master\IN4307 - Medical Visualization\DeViDe-multiVWR,D:\Users\Jan-Willem\Documents\GitHub\DeViDe-multiVWR" 
