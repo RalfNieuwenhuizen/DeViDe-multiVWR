@@ -115,13 +115,17 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             self, self._module_manager, 
             multiDirectionalSlicedViewSegmentation3dVieWeRFrame.multiDirectionalSlicedViewSegmentation3dVieWeRFrame)
         # change the title to something more spectacular (or at least something non-default)
-        self._view_frame.SetTitle('multiDirectionalSlicedViewSegmentation3dVieWeR')
+
+        #THE FRAME (reference)
+        frame = self._view_frame
+        frame.SetTitle('multiDirectionalSlicedViewSegmentation3dVieWeR')
+
 
         # create the necessary VTK objects: we only need a renderer,
         # the RenderWindowInteractor in the view_frame has the rest.
         self.ren = vtk.vtkRenderer()
         self.ren.SetBackground(0.62,0.62,0.62)
-        self._view_frame.view3d.GetRenderWindow().AddRenderer(self.ren)
+        frame.view3d.GetRenderWindow().AddRenderer(self.ren)
 
          # setup orientation widget stuff
         # NB NB NB: we switch interaction with this off later
@@ -143,7 +147,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         self._axes_actor = vtk.vtkAxesActor()
 
         self._orientation_widget.SetInteractor(
-            self._view_frame.view3d)
+            frame.view3d)
         self._orientation_widget.SetOrientationMarker(
             self._axes_actor)
         self._orientation_widget.On()
@@ -153,6 +157,13 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         self._orientation_widget.InteractiveOff()
 
 
+        # our interactor styles (we could add joystick or something too)
+        self._cInteractorStyle = vtk.vtkInteractorStyleTrackballCamera()
+        # set the default
+        frame.view3d.SetInteractorStyle(self._cInteractorStyle)
+        frame.view3d.Unbind(wx.EVT_MOUSEWHEEL)
+        frame.view3d.Bind(wx.EVT_MOUSEWHEEL, self._handler_mousewheel)        
+
 
         self.ren.AddActor(self.contour_severe_actor)
         self.ren.AddActor(self.contour_moderate_actor)
@@ -160,18 +171,18 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
 
         self.ren2 = vtk.vtkRenderer()
         self.ren2.SetBackground(0.19,0.19,0.19)
-        self._view_frame.front.GetRenderWindow().AddRenderer(self.ren2)
-        self.slice_viewer1 = CMSliceViewer(self._view_frame.front, self.ren2)
+        frame.front.GetRenderWindow().AddRenderer(self.ren2)
+        self.slice_viewer1 = CMSliceViewer(frame.front, self.ren2)
 
         self.ren3 = vtk.vtkRenderer()
         self.ren3.SetBackground(0.19,0.19,0.19)
-        self._view_frame.top.GetRenderWindow().AddRenderer(self.ren3)
-        self.slice_viewer2 = CMSliceViewer(self._view_frame.top, self.ren3)
+        frame.top.GetRenderWindow().AddRenderer(self.ren3)
+        self.slice_viewer2 = CMSliceViewer(frame.top, self.ren3)
         
         self.ren4 = vtk.vtkRenderer()
         self.ren4.SetBackground(0.19,0.19,0.19)
-        self._view_frame.side.GetRenderWindow().AddRenderer(self.ren4)
-        self.slice_viewer3 = CMSliceViewer(self._view_frame.side, self.ren4)
+        frame.side.GetRenderWindow().AddRenderer(self.ren4)
+        self.slice_viewer3 = CMSliceViewer(frame.side, self.ren4)
         
 
         self.sync = SyncSliceViewers()
@@ -200,7 +211,9 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         """Clean-up method called on all DeVIDE modules when they are
         deleted.
         FIXME: Still get a nasty X error :(
-        """
+        """        
+        #THE FRAME (reference)
+        frame = self._view_frame
 
         # with this complicated de-init, we make sure that VTK is 
         # properly taken care of
@@ -214,25 +227,25 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         self.slice_viewer1.close()
         self.slice_viewer2.close()
         self.slice_viewer3.close()
-        self._view_frame.view3d.GetRenderWindow().Finalize()
-        self._view_frame.view3d.SetRenderWindow(None)
-        self._view_frame.front.GetRenderWindow().Finalize()
-        self._view_frame.front.SetRenderWindow(None)
-        self._view_frame.top.GetRenderWindow().Finalize()
-        self._view_frame.top.SetRenderWindow(None)
-        self._view_frame.side.GetRenderWindow().Finalize()
-        self._view_frame.side.SetRenderWindow(None)
-        del self._view_frame.view3d
-        del self._view_frame.front
-        del self._view_frame.top
-        del self._view_frame.side
+        frame.view3d.GetRenderWindow().Finalize()
+        frame.view3d.SetRenderWindow(None)
+        frame.front.GetRenderWindow().Finalize()
+        frame.front.SetRenderWindow(None)
+        frame.top.GetRenderWindow().Finalize()
+        frame.top.SetRenderWindow(None)
+        frame.side.GetRenderWindow().Finalize()
+        frame.side.SetRenderWindow(None)
+        del frame.view3d
+        del frame.front
+        del frame.top
+        del frame.side
         del self.slice_viewer3
         del self.slice_viewer2
         del self.slice_viewer1
         # done with VTK de-init
 
         # now take care of the wx window
-        self._view_frame.close()
+        frame.close()
         # then shutdown our introspection mixin
         IntrospectModuleMixin.close(self)
 
@@ -615,3 +628,37 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         """
         self._view_frame.render()
         self.slice_viewer1.render()
+
+    def _handler_mousewheel(self, event):
+        # event.GetWheelRotation() is + or - 120 depending on
+        # direction of turning.
+        if event.ControlDown():
+            delta = 10
+        elif event.ShiftDown():
+            delta = 1
+        else:
+            # if user is NOT doing shift / control, we pass on to the
+            # default handling which will give control to the VTK
+            # mousewheel handlers.
+            self._view_frame.view3d.OnMouseWheel(event)
+            return
+            
+        selected_sds  = self.sliceDirections.getSelectedSliceDirections()
+        if len(selected_sds) == 0:
+            if len(self.sliceDirections._sliceDirectionsDict) == 1:
+                # convenience: nothing selected, but there is only one SD, use that then!
+                sd = self.sliceDirections._sliceDirectionsDict.items()[0][1]
+            else:
+                return
+            
+        else:
+            sd = selected_sds[0]
+            
+        if event.GetWheelRotation() > 0:
+            sd.delta_slice(+delta)
+
+        else:
+            sd.delta_slice(-delta)
+
+        self.render()
+        #self.ipws[0].InvokeEvent('InteractionEvent')
