@@ -67,7 +67,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         #FILE
         file_box = wx.BoxSizer(wx.VERTICAL)
         
-        file_label = wx.StaticText(panel, -1, "DICOM FILE" , wx.Point(0, 0))
+        file_label = wx.StaticText(panel, -1, "VTI FILE" , wx.Point(0, 0))
         file_box.Add(file_label)
 
         #SELECTION

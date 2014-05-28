@@ -106,9 +106,9 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         ModuleBase.__init__(self, module_manager)        
         self._numDataInputs = self.NUM_INPUTS
         # use list comprehension to create list keeping track of inputs
-        # self._inputs = [{'Connected' : None, 'inputData' : None,
-        #                  'vtkActor' : None, 'ipw' : None}
-                       # for i in range(self._numDataInputs)]
+        self._inputs = [{'Connected' : None, 'inputData' : None,
+                         'vtkActor' : None, 'ipw' : None}
+                       for i in range(self._numDataInputs)]
 
         # create the view frame
         self._view_frame = module_utils.instantiate_module_view_frame(
@@ -262,11 +262,121 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         # generate output data.
         return ()
 
+    
+
     def set_input(self, idx, input_stream):
         # this gets called right before you get executed.  take the
         # input_stream and store it so that it's available during
         # execute_module()
-        pass
+
+        def add_primary_init(input_stream):
+            """After a new primary has been added, a number of other
+            actions have to be performed.
+            """
+            # add outline actor and cube axes actor to renderer
+            #self.ren.AddActor(self._outline_actor)
+            #self._outline_actor.PickableOff()
+            #self.ren.AddActor(self._cube_axes_actor2d)
+            #self._cube_axes_actor2d.PickableOff()
+            # FIXME: make this toggle-able
+            #self._cube_axes_actor2d.VisibilityOn()
+
+            # reset the VOI widget
+            #self._voi_widget.SetInteractor(self.threedFrame.threedRWI)
+            #self._voi_widget.SetInput(input_stream)
+
+            # we only want to placewidget if this is the first time
+            #if self._voi_widget.NeedsPlacement:
+            #    self._voi_widget.PlaceWidget()
+            #    self._voi_widget.NeedsPlacement = False
+
+            #self._voi_widget.SetPriority(0.6)
+            #self._handlerWidgetEnabledCheckBox()
+
+
+            # also fix up orientation actor thingy...
+            # ala = input_stream.GetFieldData().GetArray('axis_labels_array')
+            # if ala:
+            #     lut = list('LRPAFH')
+            #     labels = []
+            #     for i in range(6):
+            #         labels.append(lut[ala.GetValue(i)])
+                    
+            #     #self._set_annotated_cube_actor_labels(labels)
+            #     self._orientation_widget.Off()
+            #     self._orientation_widget.SetOrientationMarker(
+            #         self._annotated_cube_actor)
+            #     self._orientation_widget.On()
+                
+            # else:
+            #     self._orientation_widget.Off()
+            #     self._orientation_widget.SetOrientationMarker(
+            #         self._axes_actor)
+            #     self._orientation_widget.On()
+
+            # end of method add_primary_init()
+
+        def _handleNewImageDataInput():
+            connecteds = [i['Connected'] for i in self._inputs]
+
+            # if we already have a primary, make sure the new inputStream
+            # is added at a higher port number than all existing
+            # primaries and overlays
+            if 'vtkImageDataPrimary' in connecteds:
+                highestPortIndex = connecteds.index('vtkImageDataPrimary')
+                for i in range(highestPortIndex, len(connecteds)):
+                    if connecteds[i] == 'vtkImageDataOverlay':
+                        highestPortIndex = i
+
+                if idx <= highestPortIndex:
+                    raise Exception, \
+                          "Please add overlay data at higher input " \
+                          "port numbers " \
+                          "than existing primary data and overlays."
+
+            # tell all our sliceDirections about the new data
+            # this might throw an exception if the input image data
+            # is invalid, but that's ok, since we haven't done any
+            # accounting here yet.
+            # self.sliceDirections.addData(inputStream)
+
+            # find out whether this is  primary or an overlay, record it
+            if 'vtkImageDataPrimary' in connecteds:
+                # there's no way there can be only overlays in the list,
+                # the check above makes sure of that
+                self._inputs[idx]['Connected'] = 'vtkImageDataOverlay'
+            else:
+                # there are no primaries or overlays, this must be
+                # a primary then
+                self._inputs[idx]['Connected'] = 'vtkImageDataPrimary'
+
+            # also store binding to the data itself
+            self._inputs[idx]['inputData'] = input_stream
+
+
+
+            if self._inputs[idx]['Connected'] == 'vtkImageDataPrimary':
+                # things to setup when primary data is added
+                add_primary_init(input_stream)
+
+                # reset everything, including ortho camera
+                #self._resetAll()
+
+            # update our 3d renderer
+            self.render()
+
+            # end of function _handleImageData()
+
+        if not(input_stream == None):
+            if input_stream.IsA('vtkImageData'):
+                if self._inputs[idx]['Connected'] is None:
+                    _handleNewImageDataInput()
+                else:
+                    # take necessary actions to refresh
+                    prevData = self._inputs[idx]['inputData']
+                    self.sliceDirections.updateData(prevData, input_stream)
+                    # record it in our main structure
+                    self._inputs[idx]['inputData'] = input_stream
 
     def get_output(self, idx):
         # this can get called at any time when a consumer module wants
