@@ -127,6 +127,12 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         self.ren.SetBackground(0.62,0.62,0.62)
         frame.view3d.GetRenderWindow().AddRenderer(self.ren)
 
+        self._outline_source = vtk.vtkOutlineSource()
+        om = vtk.vtkPolyDataMapper()
+        om.SetInput(self._outline_source.GetOutput())
+        self._outline_actor = vtk.vtkActor()
+        self._outline_actor.SetMapper(om)
+
          # setup orientation widget stuff
         # NB NB NB: we switch interaction with this off later
         # (InteractiveOff()), thus disabling direct translation and
@@ -274,8 +280,8 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             actions have to be performed.
             """
             # add outline actor and cube axes actor to renderer
-            #self.ren.AddActor(self._outline_actor)
-            #self._outline_actor.PickableOff()
+            self.ren.AddActor(self._outline_actor)
+            self._outline_actor.PickableOff()
             #self.ren.AddActor(self._cube_axes_actor2d)
             #self._cube_axes_actor2d.PickableOff()
             # FIXME: make this toggle-able
@@ -738,6 +744,8 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         """
         self._view_frame.render()
         self.slice_viewer1.render()
+        self.slice_viewer2.render()
+        self.slice_viewer3.render()
 
     def _handler_mousewheel(self, event):
         # event.GetWheelRotation() is + or - 120 depending on
