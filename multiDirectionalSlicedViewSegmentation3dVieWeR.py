@@ -57,6 +57,11 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
     CTRL: Holding the CTRL-key does the same, but enables stepping through the data in steps of 10 slices.\n
     """
 
+    NUM_INPUTS = 1
+
+    PARTS_TO_INPUTS = {0 : tuple(range(NUM_INPUTS))}
+    # PARTS_TO_OUTPUTS = {0 : (3,4), 1 : (0,4), 2 : (1,4), 3 : (2,4)}
+
     def __init__(self, module_manager):
         """Standard constructor.  All DeVIDE modules have these, we do
         the required setup actions.
@@ -97,7 +102,13 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         self.contour_lungedge_actor.GetProperty().SetColor(0.9,0.9,0.9)	
         self.contour_lungedge_actor.GetProperty().SetOpacity(0.1)
 
-        ModuleBase.__init__(self, module_manager)
+        # call base constructor
+        ModuleBase.__init__(self, module_manager)        
+        self._numDataInputs = self.NUM_INPUTS
+        # use list comprehension to create list keeping track of inputs
+        # self._inputs = [{'Connected' : None, 'inputData' : None,
+        #                  'vtkActor' : None, 'ipw' : None}
+                       # for i in range(self._numDataInputs)]
 
         # create the view frame
         self._view_frame = module_utils.instantiate_module_view_frame(
@@ -229,7 +240,9 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         # define this as a tuple of input descriptions if you want to
         # take input data e.g. return ('vtkPolyData', 'my kind of
         # data')
-        return ()
+
+        # concatenate it num_inputs times (but these are shallow copies!)
+        return self._numDataInputs * ('vtkImageData',)
 
     def get_output_descriptions(self):
         # define this as a tuple of output descriptions if you want to
