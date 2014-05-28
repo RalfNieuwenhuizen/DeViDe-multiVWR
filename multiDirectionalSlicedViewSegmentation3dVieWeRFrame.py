@@ -12,25 +12,12 @@ import cStringIO
 from vtk.wx.wxVTKRenderWindowInteractor import wxVTKRenderWindowInteractor
 import wx
 
-# wxPython 2.8.8.1 wx.aui bugs severely on GTK. See:
-# http://trac.wxwidgets.org/ticket/9716
-# Until this is fixed, use this PyAUI to which I've added a
-# wx.aui compatibility layer.
-if wx.Platform == "__WXGTK__":
-    from external import PyAUI
-    wx.aui = PyAUI
-else:
-    import wx.aui
-
 # one could have loaded a wxGlade created resource like this:
 #from resources.python import DICOMBrowserPanels
 #reload(DICOMBrowserPanels)
 class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
     """wx.Frame child class used by multiDirectionalSlicedViewSegmentation3dVieWeR for its
     interface.
-
-    This is an AUI-managed window, so we create the top-level frame,
-    and then populate it with AUI panes.
     """
 
     def __init__(self, parent, id=-1, title="", name=""):
@@ -70,8 +57,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         self.Destroy()
 
     def _create_controls_pane(self):
-        """Create a pane for the controls (containing the threshold sliders and buttons for 
-        setting default or calculated values)
+        """Create a pane for the controls (containing file, selection and displaying tools)
         """
         panel = wx.Panel(self, -1)
         panel.SetBackgroundColour('#AAAAAA') 
@@ -129,9 +115,6 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         transparencybydistance_check = wx.CheckBox(panel, -1, "Transparency by distance" , wx.Point(0, 0))
         #unselected_box.Add(transparencybydistance_label)
         unselected_box.Add(transparencybydistance_check)
-
-  #      self.button5 = wx.Button(panel, -1, "-950 / -970 HU",pos=(8, 8), size=(175, 28))
-  #      self.button6 = wx.Button(panel, -1, "12% / 10% Lowest HU",pos=(8, 8), size=(175, 28))
   
         sizer.Add(file_box, 1, wx.ALL|wx.EXPAND, 7)
         sizer.Add(selection_box, 3, wx.ALL|wx.EXPAND, 7)
@@ -254,6 +237,3 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         self.front.Render()
         self.top.Render()
         self.side.Render()
-
-
-
