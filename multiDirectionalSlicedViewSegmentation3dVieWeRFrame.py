@@ -66,9 +66,13 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
 
         #FILE
         file_box = wx.BoxSizer(wx.VERTICAL)
+
+        self.filename = "<from network>"
         
         file_label = wx.StaticText(panel, -1, "VTI FILE" , wx.Point(0, 0))
+        filename_label = wx.StaticText(panel, -1, self.filename , wx.Point(0, 0))
         file_box.Add(file_label)
+        file_box.Add(filename_label)
 
         #SELECTION
         selection_box = wx.BoxSizer(wx.VERTICAL)
@@ -83,9 +87,9 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         tolerance_label = wx.StaticText(panel, -1, "Tolerance" , wx.Point(0, 0))
         selection_box.Add(tolerance_label)
 
-        self.lower_slider = wx.Slider(panel, -1, 30, 0, 100, (0, 0), (200, 50),wx.SL_HORIZONTAL | wx.SL_AUTOTICKS | wx.SL_LABELS)
+        self.lower_slider = wx.Slider(panel, -1, 30, 0, 100, (0, 0), (200, 50),wx.SL_HORIZONTAL | wx.SL_LABELS)
         lower_label = wx.StaticText(panel, -1, "Lower" , wx.Point(0, 0))
-        self.upper_slider = wx.Slider(panel, -1, 45, 0, 100  , (0, 0), (200, 50),wx.SL_HORIZONTAL | wx.SL_AUTOTICKS | wx.SL_LABELS)
+        self.upper_slider = wx.Slider(panel, -1, 45, 0, 100  , (0, 0), (200, 50),wx.SL_HORIZONTAL | wx.SL_LABELS)
         upper_label = wx.StaticText(panel, -1, "Upper" , wx.Point(0, 0))
 
         selection_box.Add(lower_label)
@@ -105,7 +109,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         unselected_label = wx.StaticText(panel, -1, "Unselected:" , wx.Point(0, 0))
         unselected_box.Add(unselected_label)
 
-        self.transparency_slider = wx.Slider(panel, -1, 50, 0, 100, (0, 0), (200, 50),wx.SL_HORIZONTAL | wx.SL_AUTOTICKS | wx.SL_LABELS)
+        self.transparency_slider = wx.Slider(panel, -1, 50, 0, 100, (0, 0), (200, 50),wx.SL_HORIZONTAL | wx.SL_LABELS)
         transparency_label = wx.StaticText(panel, -1, "Transparency" , wx.Point(0, 0))
 
         unselected_box.Add(transparency_label)

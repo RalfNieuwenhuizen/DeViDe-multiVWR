@@ -76,10 +76,12 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         self.mask_data = None
         self.image_data = None
         self.lungVolume = None
+        self.selectedData = None
 
         self.contour_severe_actor = vtk.vtkActor()
         self.contour_moderate_actor = vtk.vtkActor()
         self.contour_lungedge_actor = vtk.vtkActor()
+        self.contour_selected_actor = vtk.vtkActor()
 
         self.severe_mapper = vtk.vtkPolyDataMapper()
         self.severe_mapper.ScalarVisibilityOff()
@@ -90,6 +92,9 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         self.lung_mapper = vtk.vtkPolyDataMapper()
         self.lung_mapper.ScalarVisibilityOff()
 
+        self.contour_mapper = vtk.vtkPolyDataMapper()
+        self.contour_mapper.ScalarVisibilityOff()
+
         self.contour_severe_actor.SetMapper(self.severe_mapper)
         self.contour_severe_actor.GetProperty().SetColor(1,0,0)
         self.contour_severe_actor.GetProperty().SetOpacity(0.5)
@@ -99,8 +104,12 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         self.contour_moderate_actor.GetProperty().SetOpacity(0.25)
 
         self.contour_lungedge_actor.SetMapper(self.lung_mapper)
-        self.contour_lungedge_actor.GetProperty().SetColor(0.9,0.9,0.9)	
+        self.contour_lungedge_actor.GetProperty().SetColor(0.9,0.9,0.9) 
         self.contour_lungedge_actor.GetProperty().SetOpacity(0.1)
+
+        self.contour_selected_actor.SetMapper(self.contour_mapper)
+        self.contour_selected_actor.GetProperty().SetColor(1,0,0) 
+        self.contour_selected_actor.GetProperty().SetOpacity(0.8)
 
         # call base constructor
         ModuleBase.__init__(self, module_manager)        
@@ -170,31 +179,33 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         frame.view3d.Unbind(wx.EVT_MOUSEWHEEL)
         frame.view3d.Bind(wx.EVT_MOUSEWHEEL, self._handler_mousewheel)        
 
-
-        self.ren.AddActor(self.contour_severe_actor)
-        self.ren.AddActor(self.contour_moderate_actor)
-        self.ren.AddActor(self.contour_lungedge_actor)
+        # frame.front.Disable()
+        # frame.top.Disable()
+        # frame.side.Disable()
 
         self.ren2 = vtk.vtkRenderer()
         self.ren2.SetBackground(0.19,0.19,0.19)
         frame.front.GetRenderWindow().AddRenderer(self.ren2)
         self.slice_viewer1 = CMSliceViewer(frame.front, self.ren2)
+        self.slice_viewer1.set_parallel()
 
         self.ren3 = vtk.vtkRenderer()
         self.ren3.SetBackground(0.19,0.19,0.19)
         frame.top.GetRenderWindow().AddRenderer(self.ren3)
         self.slice_viewer2 = CMSliceViewer(frame.top, self.ren3)
+        self.slice_viewer2.set_parallel()
         
         self.ren4 = vtk.vtkRenderer()
         self.ren4.SetBackground(0.19,0.19,0.19)
         frame.side.GetRenderWindow().AddRenderer(self.ren4)
         self.slice_viewer3 = CMSliceViewer(frame.side, self.ren4)
+        self.slice_viewer3.set_parallel()
         
 
         self.sync = SyncSliceViewers()
-        self.sync.add_slice_viewer(self.slice_viewer1)
-        self.sync.add_slice_viewer(self.slice_viewer2)
-        self.sync.add_slice_viewer(self.slice_viewer3)
+        #self.sync.add_slice_viewer(self.slice_viewer1)
+        #self.sync.add_slice_viewer(self.slice_viewer2)
+        #self.sync.add_slice_viewer(self.slice_viewer3)
 
         # hook up all event handlers
         self._bind_events()
@@ -274,6 +285,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         # this gets called right before you get executed.  take the
         # input_stream and store it so that it's available during
         # execute_module()
+        #self._imageThreshold.SetInput(input_stream)
 
         def add_primary_init(input_stream):
             """After a new primary has been added, a number of other
@@ -367,8 +379,31 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
 
                 # reset everything, including ortho camera
                 #self._resetAll()
+            
+            #2d dinges
+            self.slice_viewer1.set_input(input_stream)
+            self.slice_viewer1.reset_camera()
+            self.slice_viewer2.set_input(input_stream)
+            self.slice_viewer2.reset_camera()
+            self.slice_viewer3.set_input(input_stream)
+            self.slice_viewer3.reset_camera()
+            self.slice_viewer1.ipws[0].SetPlaneOrientation(0)
+            self.slice_viewer2.ipws[0].SetPlaneOrientation(1)
+            self.slice_viewer3.ipws[0].SetPlaneOrientation(2)
+
+            cam1 = self.slice_viewer1.renderer.GetActiveCamera()
+            cam1.SetViewUp(-1,-1,0)            
+            cam1.SetPosition(1000, 127, 127)
+            cam2 = self.slice_viewer2.renderer.GetActiveCamera()
+            cam2.SetViewUp(0,0,-1)            
+            cam2.SetPosition(127, 1000, 127)
+            cam3 = self.slice_viewer3.renderer.GetActiveCamera()
+            cam3.SetViewUp(0,-1,0)            
+            cam3.SetPosition(127, 127, 1000)
+
 
             # update our 3d renderer
+            #self.create_contour(0,0)
             self.render()
 
             # end of function _handleImageData()
@@ -380,7 +415,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                 else:
                     # take necessary actions to refresh
                     prevData = self._inputs[idx]['inputData']
-                    self.sliceDirections.updateData(prevData, input_stream)
+                    # self.sliceDirections.updateData(prevData, input_stream)
                     # record it in our main structure
                     self._inputs[idx]['inputData'] = input_stream
 
@@ -416,6 +451,73 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         # empty renderwindow.
         wx.SafeYield()
         self.render()
+
+    # def create_contour(self, contourValueModerate, contourValueSevere):
+    #     """
+    #     """
+    #     mask = vtk.vtkImageMask()
+    #     severeFraction = 0.10
+    #     moderateFraction = 0.12
+        
+    #     # We only want to contour the lungs, so mask it
+    #     mask.SetMaskInput(self.mask_data)
+    #     mask.SetInput(self._inputs[0]['inputData'])
+    #     mask.Update()
+    #     self.selectedData = mask.GetOutput()
+        
+        
+    #     if contourValueModerate == 0 and contourValueSevere == 0: # This means we get to calculate the percentual values ourselves!
+    #         scalars = self.lungVolume.GetScalarRange()
+    #         range = scalars[1]-scalars[0]
+
+    #         contourValueSevere = scalars[0]+range*severeFraction
+    #         contourValueModerate = scalars[0]+range*moderateFraction
+
+    #         self._view_frame.upper_slider.SetValue(contourValueModerate)    
+    #         self._view_frame.lower_slider.SetValue(contourValueSevere)
+    #         self.create_overlay(contourValueModerate,contourValueSevere)
+
+    #     # Create the contours
+    #     self.adjust_contour(self.selectedData, contourValueSevere, self.severe_mapper)
+    #     self.adjust_contour(self.selectedData, contourValueModerate, self.moderate_mapper)
+    #     #self.adjust_contour(self.mask_data, 0.5, self.lung_mapper)
+    #     contourData = vtk.vtkMarchingCubes()
+    #     contourData.SetValue(0,1)
+    #     contourData.SetInput(self.mask_data)
+
+    #     smoother = vtk.vtkWindowedSincPolyDataFilter()
+    #     smoother.SetInput(contourData.GetOutput())
+    #     smoother.BoundarySmoothingOn()
+    #     smoother.SetNumberOfIterations(40)
+    #     smoother.Update()
+    #     self.contour_mapper.SetInput(smoother.GetOutput())
+    #     self.contour_mapper.Update()
+
+    #     # Set the camera to a nice view
+    #     cam = self.ren.GetActiveCamera()
+    #     cam.SetPosition(0,-100,0)
+    #     cam.SetFocalPoint(0,0,0)
+    #     cam.SetViewUp(0,0,1)
+    #     self.ren.ResetCamera()
+    #     self.render()
+        
+
+    #     self._imageThreshold = vtk.vtkImageThreshold()
+    #     self._contourFilter = vtk.vtkContourFilter()
+
+    #     # now setup some defaults before our sync
+    #     self._config.iso_value = 128
+    #     # now setup some defaults before our sync
+    #     self._config.lowerThreshold = 0
+    #     self._config.upperThreshold = 2500
+    #     #self._config.rtu = 1
+    #     self._config.replaceIn = 1
+    #     self._config.inValue = 1
+    #     self._config.replaceOut = 1
+    #     self._config.outValue = 0
+    #     self._config.outputScalarType = self._imageThreshold.GetOutputScalarType()
+
+    #     self.selectedData = self._imageThreshold.GetOutput()
 
     def create_volumerender(self, contourValueModerate, contourValueSevere):
         """Creates a volumerender of the masked data using iso-contour surfaces 
@@ -616,8 +718,22 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         # self._view_frame.button6.Bind(wx.EVT_BUTTON,
         #        self._handler_button6)
 
+        self._view_frame.side_zoomer.Bind(wx.EVT_SLIDER, self._handler_zoom_in)
+        self._view_frame.side_zoomer.Bind(wx.EVT_SCROLL_LINEDOWN, self._handler_zoom_out)
+
         self._view_frame.upper_slider.Bind(wx.EVT_SCROLL_CHANGED, self._handler_slider1)
         self._view_frame.lower_slider.Bind(wx.EVT_SCROLL_CHANGED, self._handler_slider2)
+
+    def _handler_zoom_in(self, event):
+        print event
+        self.slice_viewer1.SetControlKey(1)
+        self.slice_viewer1.MouseWheelForwardEvent()
+        self.render()
+
+    def _handler_zoom_out(self, event):
+        self._view_frame.side.SetControlKey(1)
+        self._view_frame.side.MouseWheelBackwardEvent()
+        self.render()
 
     def _handler_button1(self, event):
         """Reset the camera of the main render window
