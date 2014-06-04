@@ -559,8 +559,8 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         vf.front_zoomer.Bind(wx.EVT_SLIDER, lambda evt: self._handler_zoom(evt, self.slice_viewer1))
         vf.front_zoomer.Bind(wx.EVT_SLIDER, lambda evt: self._handler_zoom(evt, self.slice_viewer1))
 
-        vf.upper_slider.Bind(wx.EVT_SCROLL, self._handler_tolerance_sync)
-        vf.lower_slider.Bind(wx.EVT_SCROLL, self._handler_tolerance_sync)
+        # vf.upper_slider.Bind(wx.EVT_SCROLL, self._handler_tolerance_sync)
+        # vf.lower_slider.Bind(wx.EVT_SCROLL, self._handler_tolerance_sync)
         vf.upper_slider.Bind(wx.EVT_SCROLL_CHANGED, self._handler_upper_tolerance)
         vf.lower_slider.Bind(wx.EVT_SCROLL_CHANGED, self._handler_lower_tolerance)
 
@@ -620,15 +620,15 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             self.load_data_from_file(full_file_path)
         dlg.Destroy()
 
-    def _handler_tolerance_sync(self, event):
-        """Handler for slider adjustment (Lower Threshold)
-        """
-        lowerValue = self._view_frame.lower_slider.GetValue()
-        upperValue = self._view_frame.upper_slider.GetValue()
-        if lowerValue > upperValue:
-            self._view_frame.upper_slider.SetValue(lowerValue)
-        if upperValue < lowerValue:
-            self._view_frame.lower_slider.SetValue(upperValue)
+    # def _handler_tolerance_sync(self, event):
+    #     """Handler for slider adjustment (Lower Threshold)
+    #     """
+    #     lowerValue = self._view_frame.lower_slider.GetValue()
+    #     upperValue = self._view_frame.upper_slider.GetValue()
+    #     if lowerValue > upperValue:
+    #         self._view_frame.upper_slider.SetValue(lowerValue)
+    #     if upperValue < lowerValue:
+    #         self._view_frame.lower_slider.SetValue(upperValue)
 
     def _handler_lower_tolerance(self, event):
         """Handler for slider adjustment (Lower Threshold)
