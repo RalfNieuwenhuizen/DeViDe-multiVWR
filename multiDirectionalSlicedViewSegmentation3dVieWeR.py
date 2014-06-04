@@ -364,13 +364,8 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             self.slice_viewer2.ipws[0].SetPlaneOrientation(2)
             self.slice_viewer3.ipws[0].SetPlaneOrientation(0)
 
-            size = input_stream.GetDimensions()
-            self._view_frame.side_zoomer.SetMax(size[0]-1)
-            self._view_frame.top_zoomer.SetMax(size[2]-1)
-            self._view_frame.front_zoomer.SetMax(size[1]-1)
-            self._view_frame.side_zoomer.SetValue(0)
-            self._view_frame.top_zoomer.SetValue(0)
-            self._view_frame.front_zoomer.SetValue(0)
+            self._handler_reset_all(None)
+            self._reset_zoomers()
 
             cam1 = self.slice_viewer1.renderer.GetActiveCamera()
             cam1.SetViewUp(0,-1,0)            
@@ -393,12 +388,17 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             if input_stream.IsA('vtkImageData'):
                 if self._inputs[idx]['Connected'] is None:
                     _handleNewImageDataInput()
+                    self._reset_zoomers()
                 else:
                     # take necessary actions to refresh
                     prevData = self._inputs[idx]['inputData']
-                    # self.sliceDirections.updateData(prevData, input_stream)
+                    self.slice_viewer1.set_input(input_stream)
+                    self.slice_viewer2.set_input(input_stream)
+                    self.slice_viewer3.set_input(input_stream)
                     # record it in our main structure
                     self._inputs[idx]['inputData'] = input_stream
+                    self._handler_reset_all(None)
+                    self._reset_zoomers()
 
     def get_output(self, idx):
         # this can get called at any time when a consumer module wants
@@ -526,16 +526,21 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         reader = vtk.vtkXMLImageDataReader()
         reader.SetFileName(file_path)
         reader.Update()
-        self.image_data = reader.GetOutput()
-        self.slice_viewer1.set_input(self.image_data)
-        self.slice_viewer1.reset_camera()
-        self.slice_viewer2.set_input(self.image_data)
-        self.slice_viewer2.reset_camera()        
-        self.slice_viewer3.set_input(self.image_data)
-        self.slice_viewer3.reset_camera()
-        self.slice_viewer1.ipws[0].SetPlaneOrientation(1)
-        self.slice_viewer2.ipws[0].SetPlaneOrientation(2)
-        self.slice_viewer3.ipws[0].SetPlaneOrientation(0)
+
+        self.set_input(0, reader.GetOutput())
+
+        # self.image_data = reader.GetOutput()
+        # self.slice_viewer1.set_input(self.image_data)
+        # self.slice_viewer1.reset_camera()
+        # self.slice_viewer2.set_input(self.image_data)
+        # self.slice_viewer2.reset_camera()        
+        # self.slice_viewer3.set_input(self.image_data)
+        # self.slice_viewer3.reset_camera()
+        # self.slice_viewer1.ipws[0].SetPlaneOrientation(1)
+        # self.slice_viewer2.ipws[0].SetPlaneOrientation(2)
+        # self.slice_viewer3.ipws[0].SetPlaneOrientation(0)
+
+        # _reset_zoomers
 
         self.render()
         
@@ -578,19 +583,30 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         self.slice_viewer3.reset_to_default_view(2)
         orientations = [2, 0, 1]
         for i, ipw in enumerate(self.slice_viewer1.ipws):
-                ipw.SetPlaneOrientation(orientations[i]) # axial
+                # ipw.SetPlaneOrientation(orientations[i]) # axial
                 ipw.SetSliceIndex(0)
         self.render()
 
         for i, ipw in enumerate(self.slice_viewer2.ipws):
-                ipw.SetPlaneOrientation(orientations[i]) # axial
+                # ipw.SetPlaneOrientation(orientations[i]) # axial
                 ipw.SetSliceIndex(0)
         self.render()
 
         for i, ipw in enumerate(self.slice_viewer3.ipws):
-                ipw.SetPlaneOrientation(orientations[i]) # axial
+                # ipw.SetPlaneOrientation(orientations[i]) # axial
                 ipw.SetSliceIndex(0)
         self.render()
+
+    def _reset_zoomers(self):
+        """Reset the zoom-sliders for each slicePane
+        """
+        size = self._inputs[0]['inputData'].GetDimensions()
+        self._view_frame.side_zoomer.SetMax(size[0]-1)
+        self._view_frame.top_zoomer.SetMax(size[2]-1)
+        self._view_frame.front_zoomer.SetMax(size[1]-1)
+        self._view_frame.side_zoomer.SetValue(0)
+        self._view_frame.top_zoomer.SetValue(0)
+        self._view_frame.front_zoomer.SetValue(0)
 
     def _handler_file_open(self, event):
         """Handler for file opening
