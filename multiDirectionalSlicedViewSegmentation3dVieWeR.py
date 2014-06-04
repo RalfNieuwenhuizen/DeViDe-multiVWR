@@ -364,6 +364,14 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             self.slice_viewer2.ipws[0].SetPlaneOrientation(2)
             self.slice_viewer3.ipws[0].SetPlaneOrientation(0)
 
+            size = input_stream.GetDimensions()
+            self._view_frame.side_zoomer.SetMax(size[0]-1)
+            self._view_frame.top_zoomer.SetMax(size[2]-1)
+            self._view_frame.front_zoomer.SetMax(size[1]-1)
+            self._view_frame.side_zoomer.SetValue(0)
+            self._view_frame.top_zoomer.SetValue(0)
+            self._view_frame.front_zoomer.SetValue(0)
+
             cam1 = self.slice_viewer1.renderer.GetActiveCamera()
             cam1.SetViewUp(0,-1,0)            
             cam1.SetPosition(127, 127, 1000)
@@ -539,23 +547,21 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
 
         vf.filename_label.Bind(wx.EVT_BUTTON, self._handler_file_open)
 
-        vf.side_zoomer.Bind(wx.EVT_SLIDER, self._handler_zoom_in)
-        vf.side_zoomer.Bind(wx.EVT_SCROLL_LINEDOWN, self._handler_zoom_out)
+        vf.side_zoomer.Bind(wx.EVT_SLIDER, lambda evt: self._handler_zoom(evt, self.slice_viewer3))
+        vf.side_zoomer.Bind(wx.EVT_SLIDER, lambda evt: self._handler_zoom(evt, self.slice_viewer3))
+        vf.top_zoomer.Bind(wx.EVT_SLIDER, lambda evt: self._handler_zoom(evt, self.slice_viewer2))
+        vf.top_zoomer.Bind(wx.EVT_SLIDER, lambda evt: self._handler_zoom(evt, self.slice_viewer2))
+        vf.front_zoomer.Bind(wx.EVT_SLIDER, lambda evt: self._handler_zoom(evt, self.slice_viewer1))
+        vf.front_zoomer.Bind(wx.EVT_SLIDER, lambda evt: self._handler_zoom(evt, self.slice_viewer1))
 
         vf.upper_slider.Bind(wx.EVT_SCROLL, self._handler_tolerance_sync)
         vf.lower_slider.Bind(wx.EVT_SCROLL, self._handler_tolerance_sync)
         vf.upper_slider.Bind(wx.EVT_SCROLL_CHANGED, self._handler_upper_tolerance)
         vf.lower_slider.Bind(wx.EVT_SCROLL_CHANGED, self._handler_lower_tolerance)
 
-    def _handler_zoom_in(self, event):
-        print event
-        self.slice_viewer1.SetControlKey(1)
-        self.slice_viewer1.MouseWheelForwardEvent()
-        self.render()
-
-    def _handler_zoom_out(self, event):
-        self._view_frame.side.SetControlKey(1)
-        self._view_frame.side.MouseWheelBackwardEvent()
+    def _handler_zoom(self, event, sv):
+        value = event.GetEventObject().GetValue()
+        sv.ipws[0].SetSliceIndex(value)
         self.render()
 
     def _handler_reset_camera(self, event):

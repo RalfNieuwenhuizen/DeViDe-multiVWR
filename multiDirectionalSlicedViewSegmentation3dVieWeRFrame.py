@@ -135,7 +135,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         panel = wx.Panel(self, -1)
 
         self.top = wxVTKRenderWindowInteractor(panel, -1, (400,400))
-        self.top_zoomer = wx.Slider(panel, -1, 50, 0, 100, (0, 0), (20, 400), wx.SL_VERTICAL)
+        self.top_zoomer = wx.Slider(panel, -1, 0, 0, 100, (0, 0), (20, 400), wx.SL_VERTICAL)
 
         label = wx.StaticText(panel, -1, "Transverse (Top view)" , wx.Point(0, 0))
         self.reset_top = wx.Button(panel, -1, "Reset Camera")
@@ -164,7 +164,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         panel = wx.Panel(self, -1)
 
         self.front = wxVTKRenderWindowInteractor(panel, -1, (400,400))
-        self.front_zoomer = wx.Slider(panel, -1, 50, 0, 100, (0, 0), (20, 400), wx.SL_VERTICAL)
+        self.front_zoomer = wx.Slider(panel, -1, 0, 0, 100, (0, 0), (20, 400), wx.SL_VERTICAL)
 
         label = wx.StaticText(panel, -1, "Coronal (Front view)" , wx.Point(0, 0))
         self.reset_front = wx.Button(panel, -1, "Reset Camera")
@@ -193,7 +193,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         panel = wx.Panel(self, -1)
 
         self.side = wxVTKRenderWindowInteractor(panel, -1, (400,400))
-        self.side_zoomer = wx.Slider(panel, -1, 50, 0, 100, (0, 0), (20, 400), wx.SL_VERTICAL)
+        self.side_zoomer = wx.Slider(panel, -1, 0, 0, 100, (0, 0), (20, 400), wx.SL_VERTICAL)
 
         label = wx.StaticText(panel, -1, "Sagittal (Side view)" , wx.Point(0, 0))
         self.reset_side = wx.Button(panel, -1, "Reset Camera")
