@@ -70,9 +70,9 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         self.filename = "<from network>"
         
         file_label = wx.StaticText(panel, -1, "VTI FILE" , wx.Point(0, 0))
-        filename_label = wx.StaticText(panel, -1, self.filename , wx.Point(0, 0))
+        self.filename_label = wx.Button(panel, -1, self.filename , wx.Point(0, 0))
         file_box.Add(file_label)
-        file_box.Add(filename_label)
+        file_box.Add(self.filename_label)
 
         #SELECTION
         selection_box = wx.BoxSizer(wx.VERTICAL)

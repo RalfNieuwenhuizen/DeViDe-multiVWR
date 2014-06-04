@@ -73,39 +73,12 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         self.IMAGE_VIEWER = IMAGE_VIEWER
 
 	    # we need all this for our contours
-        self.mask_data = None
-        self.image_data = None
-        self.lungVolume = None
         self.selectedData = None
 
-        self.contour_severe_actor = vtk.vtkActor()
-        self.contour_moderate_actor = vtk.vtkActor()
-        self.contour_lungedge_actor = vtk.vtkActor()
         self.contour_selected_actor = vtk.vtkActor()
-
-        self.severe_mapper = vtk.vtkPolyDataMapper()
-        self.severe_mapper.ScalarVisibilityOff()
-
-        self.moderate_mapper = vtk.vtkPolyDataMapper()
-        self.moderate_mapper.ScalarVisibilityOff()
-
-        self.lung_mapper = vtk.vtkPolyDataMapper()
-        self.lung_mapper.ScalarVisibilityOff()
 
         self.contour_mapper = vtk.vtkPolyDataMapper()
         self.contour_mapper.ScalarVisibilityOff()
-
-        self.contour_severe_actor.SetMapper(self.severe_mapper)
-        self.contour_severe_actor.GetProperty().SetColor(1,0,0)
-        self.contour_severe_actor.GetProperty().SetOpacity(0.5)
-
-        self.contour_moderate_actor.SetMapper(self.moderate_mapper)
-        self.contour_moderate_actor.GetProperty().SetColor(0.5,0,1)
-        self.contour_moderate_actor.GetProperty().SetOpacity(0.25)
-
-        self.contour_lungedge_actor.SetMapper(self.lung_mapper)
-        self.contour_lungedge_actor.GetProperty().SetColor(0.9,0.9,0.9) 
-        self.contour_lungedge_actor.GetProperty().SetOpacity(0.1)
 
         self.contour_selected_actor.SetMapper(self.contour_mapper)
         self.contour_selected_actor.GetProperty().SetColor(1,0,0) 
@@ -387,19 +360,19 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             self.slice_viewer2.reset_camera()
             self.slice_viewer3.set_input(input_stream)
             self.slice_viewer3.reset_camera()
-            self.slice_viewer1.ipws[0].SetPlaneOrientation(0)
-            self.slice_viewer2.ipws[0].SetPlaneOrientation(1)
-            self.slice_viewer3.ipws[0].SetPlaneOrientation(2)
+            self.slice_viewer1.ipws[0].SetPlaneOrientation(1)
+            self.slice_viewer2.ipws[0].SetPlaneOrientation(2)
+            self.slice_viewer3.ipws[0].SetPlaneOrientation(0)
 
             cam1 = self.slice_viewer1.renderer.GetActiveCamera()
-            cam1.SetViewUp(-1,-1,0)            
-            cam1.SetPosition(1000, 127, 127)
+            cam1.SetViewUp(0,-1,0)            
+            cam1.SetPosition(127, 127, 1000)
             cam2 = self.slice_viewer2.renderer.GetActiveCamera()
-            cam2.SetViewUp(0,0,-1)            
-            cam2.SetPosition(127, 1000, 127)
+            cam2.SetViewUp(-1,-1,0)            
+            cam2.SetPosition(1000, 127, 127)
             cam3 = self.slice_viewer3.renderer.GetActiveCamera()
-            cam3.SetViewUp(0,-1,0)            
-            cam3.SetPosition(127, 127, 1000)
+            cam3.SetViewUp(0,0,-1)            
+            cam3.SetPosition(127, 1000, 127)
 
 
             # update our 3d renderer
@@ -519,49 +492,6 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
 
     #     self.selectedData = self._imageThreshold.GetOutput()
 
-    def create_volumerender(self, contourValueModerate, contourValueSevere):
-        """Creates a volumerender of the masked data using iso-contour surfaces 
-        created by the Marching Cubes algorithm at the specified contourvalues.
-        """
-        self._view_frame.SetStatusText("Creating Volumerender...")
-        self.image_data
-        mask = vtk.vtkImageMask()
-        severeFraction = 0.10
-        moderateFraction = 0.12
-        
-        # We only want to contour the lungs, so mask it
-        mask.SetMaskInput(self.mask_data)
-        mask.SetInput(self.image_data)
-        mask.Update()
-        self.lungVolume = mask.GetOutput()
-        
-        
-        if contourValueModerate == 0 and contourValueSevere == 0: # This means we get to calculate the percentual values ourselves!
-	        scalars = self.lungVolume.GetScalarRange()
-	        range = scalars[1]-scalars[0]
-
-	        contourValueSevere = scalars[0]+range*severeFraction
-	        contourValueModerate = scalars[0]+range*moderateFraction
-
-	        self._view_frame.upper_slider.SetValue(contourValueModerate)	
-	        self._view_frame.lower_slider.SetValue(contourValueSevere)
-	        self.create_overlay(contourValueModerate,contourValueSevere)
-
-        # Create the contours
-        self.adjust_contour(self.lungVolume, contourValueSevere, self.severe_mapper)
-        self.adjust_contour(self.lungVolume, contourValueModerate, self.moderate_mapper)
-        #self.adjust_contour(self.mask_data, 0.5, self.lung_mapper)
-        self.create_lungcontour()
-
-        # Set the camera to a nice view
-        cam = self.ren.GetActiveCamera()
-        cam.SetPosition(0,-100,0)
-        cam.SetFocalPoint(0,0,0)
-        cam.SetViewUp(0,0,1)
-        self.ren.ResetCamera()
-        self.render()
-        self._view_frame.SetStatusText("Created Volumerender")
-
     def adjust_contour(self, volume, contourValue, mapper):
         """Adjust or create an isocontour using the Marching Cubes surface at the given 
         value using the given mapper
@@ -575,154 +505,47 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
     	self.render()
     	self._view_frame.SetStatusText("Calculated new volumerender")
 
-    def create_lungcontour(self):
-        """Create a lungcontour using the Marching Cubes algorithm and smooth the surface
-        
-        """
-    	self._view_frame.SetStatusText("Calculating lungcontour...")
-    	contourLung = vtk.vtkMarchingCubes()
-    	contourLung.SetValue(0,1)
-    	contourLung.SetInput(self.mask_data)
-
-    	smoother = vtk.vtkWindowedSincPolyDataFilter()
-    	smoother.SetInput(contourLung.GetOutput())
-    	smoother.BoundarySmoothingOn()
-    	smoother.SetNumberOfIterations(40)
-    	smoother.Update()
-    	self.lung_mapper.SetInput(smoother.GetOutput())
-    	self.lung_mapper.Update()
-    	self._view_frame.SetStatusText("Calculated lungcontour")
-
-	
-    def create_overlay(self, emphysemavalue, severeemphysemavalue):
-        """Creates an overlay for the slice-based volume view
-           0: no emphysema
-           1: moderate emphysema
-           2: severe emphysema
-        """
-        
-    	self._view_frame.SetStatusText("Creating Overlay...")
-    	mask = vtk.vtkImageMask()
-    	mask2 = vtk.vtkImageMask()
-    	threshold = vtk.vtkImageThreshold()
-    	threshold2 = vtk.vtkImageThreshold()
-    	math=vtk.vtkImageMathematics()
-    
-    	mask.SetInput(self.image_data)
-    	mask.SetMaskInput(self.mask_data)
-    
-    	threshold.SetInput(mask.GetOutput())
-    	threshold.ThresholdByLower(emphysemavalue)
-    	threshold.SetOutValue(0)
-    	threshold.SetInValue(1)
-
-    	threshold2.SetInput(mask.GetOutput())
-    	threshold2.ThresholdByLower(severeemphysemavalue)
-    	threshold2.SetOutValue(1)
-    	threshold2.SetInValue(2)
-
-    	math.SetOperationToMultiply()
-    	math.SetInput1(threshold.GetOutput())
-    	math.SetInput2(threshold2.GetOutput())
-
-    	math.Update()
-
-    	overlay = math.GetOutput()
-    	self.slice_viewer1.set_overlay_input(None)
-    	self.slice_viewer1.set_overlay_input(overlay)
-    	self.render()
-    	self._view_frame.SetStatusText("Created Overlay")
-    	
-
     def load_data_from_file(self, file_path):
         """Loads scanvolume data from file. Also sets the volume as input for the sliceviewers
         """
-        self._view_frame.SetStatusText("Opening file: %s..." % (file_path))        
+        #self._view_frame.SetStatusText("Opening file: %s..." % (file_path))        
         filename = os.path.split(file_path)[1]
         fileBaseName =os.path.splitext(filename)[0]
 
-        reader = vtk.vtkMetaImageReader()
+        self._view_frame.filename = filename
+        self._view_frame.filename_label.SetLabel(filename)
+
+        reader = vtk.vtkXMLImageDataReader()
         reader.SetFileName(file_path)
         reader.Update()
         self.image_data = reader.GetOutput()
         self.slice_viewer1.set_input(self.image_data)
         self.slice_viewer1.reset_camera()
-        self.slice_viewer1.render()
-
         self.slice_viewer2.set_input(self.image_data)
-        self.slice_viewer2.reset_camera()
-        self.slice_viewer2.render()
-        
+        self.slice_viewer2.reset_camera()        
         self.slice_viewer3.set_input(self.image_data)
-        self.slice_viewer3.render()
-        self.slice_viewer3.set_opacity(0.1)
-        cam = self.ren.GetActiveCamera()
-        cam.SetPosition(0,-100,0)
-        cam.SetFocalPoint(0,0,0)
-        cam.SetViewUp(0,0,1)
-        self.ren.ResetCamera()
-       
-        if (self.mask_data) is not None: # We can start calculating the volumerender
-	        self.create_volumerender(0,0)
-        else:
-	        self._view_frame.SetStatusText("Opened file")
+        self.slice_viewer3.reset_camera()
+        self.slice_viewer1.ipws[0].SetPlaneOrientation(1)
+        self.slice_viewer2.ipws[0].SetPlaneOrientation(2)
+        self.slice_viewer3.ipws[0].SetPlaneOrientation(0)
 
-    def load_mask_from_file(self, file_path):
-        """Loads mask file
-        """
-        self._view_frame.SetStatusText( "Opening mask: %s..." % (file_path))        
-        filename = os.path.split(file_path)[1]
-        fileBaseName =os.path.splitext(filename)[0]
-
-        reader = vtk.vtkMetaImageReader()
-        reader.SetFileName(file_path)
-        reader.Update()
-        self.mask_data = reader.GetOutput()
-        if (self.image_data) is not None:
-	        self.create_volumerender(0,0)
-        else:
-	        self._view_frame.SetStatusText("Opened mask file")
-	        
-    def save_to_file(self, file_path):
-        """Save data from main renderwindow (the contour one) to a PNG-file
-        """
-        w2i  = vtk.vtkWindowToImageFilter()
-        w2i.SetInput(self._view_frame.view3d.GetRenderWindow()); 
-        w2i.Update()
-        writer = vtk.vtkPNGWriter()
-        writer.SetInput(w2i.GetOutput())
-        writer.SetFileName(file_path)
-        writer.Update()
-        result = writer.Write()
-        if result == 0:
-            self._view_frame.SetStatusText( "Saved file")
-        else:
-            self._view_frame.SetStatusText( "Saved file to: %s..." % (file_path))
-
+        self.render()
+        
     def _bind_events(self):
         """Bind wx events to Python callable object event handlers.
         """
 
-        # vf = self._view_frame
+        vf = self._view_frame
 
-        # self._view_frame.button1.Bind(wx.EVT_BUTTON,
-        #         self._handler_button1)
-        # self._view_frame.button2.Bind(wx.EVT_BUTTON,
-        #         self._handler_button2)
-        # self._view_frame.button3.Bind(wx.EVT_BUTTON,
-        #        self._handler_button3)
-        # self._view_frame.button4.Bind(wx.EVT_BUTTON,
-        #        self._handler_button4)
-        # self._view_frame.button5.Bind(wx.EVT_BUTTON,
-        #        self._handler_button5)
-        # self._view_frame.button6.Bind(wx.EVT_BUTTON,
-        #        self._handler_button6)
+        vf.filename_label.Bind(wx.EVT_BUTTON, self._handler_file_open)
 
-        self._view_frame.side_zoomer.Bind(wx.EVT_SLIDER, self._handler_zoom_in)
-        self._view_frame.side_zoomer.Bind(wx.EVT_SCROLL_LINEDOWN, self._handler_zoom_out)
+        vf.side_zoomer.Bind(wx.EVT_SLIDER, self._handler_zoom_in)
+        vf.side_zoomer.Bind(wx.EVT_SCROLL_LINEDOWN, self._handler_zoom_out)
 
-        self._view_frame.upper_slider.Bind(wx.EVT_SCROLL_CHANGED, self._handler_slider1)
-        self._view_frame.lower_slider.Bind(wx.EVT_SCROLL_CHANGED, self._handler_slider2)
+        vf.upper_slider.Bind(wx.EVT_SCROLL, self._handler_tolerance_sync)
+        vf.lower_slider.Bind(wx.EVT_SCROLL, self._handler_tolerance_sync)
+        vf.upper_slider.Bind(wx.EVT_SCROLL_CHANGED, self._handler_upper_tolerance)
+        vf.lower_slider.Bind(wx.EVT_SCROLL_CHANGED, self._handler_lower_tolerance)
 
     def _handler_zoom_in(self, event):
         print event
@@ -735,34 +558,18 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         self._view_frame.side.MouseWheelBackwardEvent()
         self.render()
 
-    def _handler_button1(self, event):
-        """Reset the camera of the main render window
+    def _handler_reset_camera(self, event):
+        """Reset the camera for the sliceviewer
         """
-        self.ren.ResetCamera()
+        event.GetEventObject().reset_camera()
         self.render()
 
-    def _handler_button2(self, event):
-        """Reset all for the main render window
-        """
-        cam = self.ren.GetActiveCamera()
-        cam.SetPosition(0,-100,0)
-        cam.SetFocalPoint(0,0,0)
-        cam.SetViewUp(0,0,1)
-        self.ren.ResetCamera()
-        self.render()
-
-    def _handler_button3(self, event):
-        """Reset the camera for the sliceviewers
-        """
-        self.slice_viewer1.reset_camera()
-        self.slice_viewer2.reset_camera()
-        self.render()
-
-    def _handler_button4(self, event):
+    def _handler_reset_all(self, event):
         """Reset all for the sliceviewers
         """
         self.slice_viewer1.reset_to_default_view(2)
         self.slice_viewer2.reset_to_default_view(2)
+        self.slice_viewer3.reset_to_default_view(2)
         orientations = [2, 0, 1]
         for i, ipw in enumerate(self.slice_viewer1.ipws):
                 ipw.SetPlaneOrientation(orientations[i]) # axial
@@ -774,32 +581,16 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                 ipw.SetSliceIndex(0)
         self.render()
 
-    def _handler_button5(self, event):
-        """Adjust the contourvalues to values recommended in literature
-        """
-        if self.lungVolume == None:
-	        return
-        else:
-            self._view_frame.upper_slider.SetValue(-950)	
-            self._view_frame.lower_slider.SetValue(-970)
-            self.adjust_contour(self.lungVolume, -950, self.moderate_mapper)
-            self.adjust_contour(self.lungVolume, -970, self.severe_mapper)
-            self.create_overlay(-950,-970)
-
-    def _handler_button6(self, event):
-        """Adjust the contourvalues to values calculated from data
-        """
-        if self.lungVolume == None:
-	        return
-        else:
-	        self.create_volumerender(0, 0)
-
+        for i, ipw in enumerate(self.slice_viewer3.ipws):
+                ipw.SetPlaneOrientation(orientations[i]) # axial
+                ipw.SetSliceIndex(0)
+        self.render()
 
     def _handler_file_open(self, event):
         """Handler for file opening
         """
-        filters = 'Volume files (*.mhd)|*.mhd;'
-        dlg = wx.FileDialog(self._view_frame, "Please choose a CT-thorax file", self._config.last_used_dir, "", filters, wx.OPEN)
+        filters = 'Volume files (*.vti)|*.vti;'
+        dlg = wx.FileDialog(self._view_frame, "Please choose a VTI file", self._config.last_used_dir, "", filters, wx.OPEN)
         if dlg.ShowModal() == wx.ID_OK:            
             filename=dlg.GetFilename()
             self._config.last_used_dir=dlg.GetDirectory()
@@ -807,52 +598,33 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             self.load_data_from_file(full_file_path)
         dlg.Destroy()
 
-    def _handler_mask_open(self, event):
-        """Handler for mask opening
+    def _handler_tolerance_sync(self, event):
+        """Handler for slider adjustment (Lower Threshold)
         """
-        filters = 'Mask files (*.mhd;#.mha)|*.mhd;*mha;'
-        dlg = wx.FileDialog(self._view_frame, "Please choose a CT-thorax mask file", self._config.last_used_dir, "", filters, wx.OPEN)
-        if dlg.ShowModal() == wx.ID_OK:            
-            filename=dlg.GetFilename()
-            self._config.last_used_dir=dlg.GetDirectory()
-            full_file_path = "%s/%s" % (self._config.last_used_dir, filename)
-            self.load_mask_from_file(full_file_path)
-        dlg.Destroy()
+        lowerValue = self._view_frame.lower_slider.GetValue()
+        upperValue = self._view_frame.upper_slider.GetValue()
+        if lowerValue > upperValue:
+            self._view_frame.upper_slider.SetValue(lowerValue)
+        if upperValue < lowerValue:
+            self._view_frame.lower_slider.SetValue(upperValue)
 
-    def _handler_file_save(self, event):
-        """Handler for filesaving
+    def _handler_lower_tolerance(self, event):
+        """Handler for slider adjustment (Lower Threshold)
         """
-        self._view_frame.SetStatusText( "Saving file...")         
-
-        filters = 'png file (*.png)|*.png'
-        dlg = wx.FileDialog(self._view_frame, "Choose a destination", self._config.last_used_dir, "", filters, wx.SAVE)
-        if dlg.ShowModal() == wx.ID_OK:
-            filename=dlg.GetFilename()
-            self._config.last_used_dir=dlg.GetDirectory()
-            file_path = "%s/%s" % (self._config.last_used_dir, filename)
-            self.save_to_file(file_path)
-        dlg.Destroy()
-        self._view_frame.SetStatusText( "Saved file")
-
-    def _handler_slider1(self, event):
-        """Handler for slider adjustment (Severe emphysema)
-        """
-        if self.lungVolume == None:
-	    	return
+        if self.selectedData == None:
+            return
         else:
-        	contourValue = self._view_frame.upper_slider.GetValue()
-    		self.adjust_contour(self.lungVolume, contourValue, self.moderate_mapper)
-    		self.create_overlay(contourValue, self._view_frame.lower_slider.GetValue())
+            return #TODO
+            #self.adjust_contour(self.lungVolume, contourValue, self.moderate_mapper)
+            #self.create_overlay(contourValue, self._view_frame.lower_slider.GetValue())
 
-    def _handler_slider2(self, event):
-        """Handler for slider adjustment (Moderate emphysema)
-        """
-        if self.lungVolume == None:
+    def _handler_upper_tolerance(self, event):
+        """Handler for slider adjustment (Upper Threshold)
+        """        
+        if self.selectedData == None:
 	    	return
-        else:        
-	    	contourValue = self._view_frame.lower_slider.GetValue()
-	    	self.adjust_contour(self.lungVolume, contourValue, self.severe_mapper)
-	    	self.create_overlay(self._view_frame.upper_slider.GetValue(),contourValue)
+        else:  
+            return #TODO      
 
     def render(self):
         """Method that calls Render() on the embedded RenderWindow.
