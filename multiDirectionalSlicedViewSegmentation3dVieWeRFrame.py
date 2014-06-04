@@ -87,9 +87,9 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         tolerance_label = wx.StaticText(panel, -1, "Tolerance" , wx.Point(0, 0))
         selection_box.Add(tolerance_label)
 
-        self.lower_slider = wx.Slider(panel, -1, 30, 0, 100, (0, 0), (200, 50),wx.SL_HORIZONTAL | wx.SL_LABELS)
+        self.lower_slider = wx.Slider(panel, -1, 0, -100, 0, (0, 0), (200, 50),wx.SL_HORIZONTAL | wx.SL_LABELS)
         lower_label = wx.StaticText(panel, -1, "Lower" , wx.Point(0, 0))
-        self.upper_slider = wx.Slider(panel, -1, 45, 0, 100  , (0, 0), (200, 50),wx.SL_HORIZONTAL | wx.SL_LABELS)
+        self.upper_slider = wx.Slider(panel, -1, 0, 0, 100  , (0, 0), (200, 50),wx.SL_HORIZONTAL | wx.SL_LABELS)
         upper_label = wx.StaticText(panel, -1, "Upper" , wx.Point(0, 0))
 
         selection_box.Add(lower_label)
