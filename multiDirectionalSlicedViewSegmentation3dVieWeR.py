@@ -67,173 +67,362 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         the required setup actions.
         """
 
-        # call base constructor
-        ModuleBase.__init__(self, module_manager)        
-        self._numDataInputs = self.NUM_INPUTS
-        # use list comprehension to create list keeping track of inputs
-        self._inputs = [{'Connected' : None, 'inputData' : None,
-                         'vtkActor' : None, 'ipw' : None}
-                       for i in range(self._numDataInputs)]
+        def _init_frame():
+            # call base constructor
+            ModuleBase.__init__(self, module_manager)        
+            self._numDataInputs = self.NUM_INPUTS
+            # use list comprehension to create list keeping track of inputs
+            self._inputs = [{'Connected' : None, 'inputData' : None,
+                             'vtkActor' : None, 'ipw' : None}
+                           for i in range(self._numDataInputs)]
 
-        # create the view frame
-        self._view_frame = module_utils.instantiate_module_view_frame(
-            self, self._module_manager, 
-            multiDirectionalSlicedViewSegmentation3dVieWeRFrame.multiDirectionalSlicedViewSegmentation3dVieWeRFrame)
-        # change the title to something more spectacular (or at least something non-default)
+            # create the view frame
+            self._view_frame = module_utils.instantiate_module_view_frame(
+                self, self._module_manager, 
+                multiDirectionalSlicedViewSegmentation3dVieWeRFrame.multiDirectionalSlicedViewSegmentation3dVieWeRFrame)
+            
+            #THE FRAME (reference)
+            frame = self._view_frame
 
-        #THE FRAME (reference)
-        frame = self._view_frame
-        frame.SetTitle('multiDirectionalSlicedViewSegmentation3dVieWeR')
+            # change the title to something more spectacular (or at least something non-default)
+            frame.SetTitle('multiDirectionalSlicedViewSegmentation3dVieWeR')
 
-        # we record the setting here, in case the user changes it
-        # during the lifetime of this model, leading to different
-        # states at init and shutdown.
-        self.IMAGE_VIEWER = IMAGE_VIEWER
+            # we record the setting here, in case the user changes it
+            # during the lifetime of this model, leading to different
+            # states at init and shutdown.
+            self.IMAGE_VIEWER = IMAGE_VIEWER
 
-        # we need all this for our contours
-        self.selectedData = None
+            # we need all this for our contours
+            self.selectedData = None
 
-        self.contour_actor = vtk.vtkActor()
-        self.contour_selected_actor = vtk.vtkActor()
+            # anything you stuff into self._config will be saved
+            self._config.last_used_dir = ''
 
-        self.contour_mapper = vtk.vtkPolyDataMapper()
-        self.contour_mapper.ScalarVisibilityOff()
-        self.contour_selected_mapper = vtk.vtkPolyDataMapper()
-        self.contour_selected_mapper.ScalarVisibilityOff()
+            # create the necessary VTK objects: we only need a renderer,
+            # the RenderWindowInteractor in the view3d has the rest.
 
-        self.contour_actor.SetMapper(self.contour_mapper)
-        self.contour_actor.GetProperty().SetColor(0.6,0.6,0.6)
-        self.contour_actor.GetProperty().SetOpacity(0.8)
-        SELF._view_frame
-
-        self.contour_selected_actor.SetMapper(self.contour_selected_mapper)
-        self.contour_selected_actor.GetProperty().SetColor(1,0,0) 
-
-
-
-        # create the necessary VTK objects: we only need a renderer,
-        # the RenderWindowInteractor in the view_frame has the rest.
-        self.ren = vtk.vtkRenderer()
-        self.ren.SetBackground(0.62,0.62,0.62)
-        frame.view3d.GetRenderWindow().AddRenderer(self.ren)
-        self.ren.AddActor(self.contour_actor)
-
-        frame.view3d._outline_source = vtk.vtkOutlineSource()
-        om = vtk.vtkPolyDataMapper()
-        om.SetInput(frame.view3d._outline_source.GetOutput())
-        frame.view3d._outline_actor = vtk.vtkActor()
-        frame.view3d._outline_actor.SetMapper(om)
-
-        frame.view3d._orientation_widget.On()
+            # setup the Top Renderer (id: 1)
+            self.renderer_top = vtk.vtkRenderer()
+            self.renderer_top.SetBackground(0.19,0.19,0.19)
+            frame.top.GetRenderWindow().AddRenderer(self.renderer_top)
+            self.slice_viewer_top = CMSliceViewer(frame.top, self.renderer_top)
+            self.slice_viewer_top.set_parallel()
         
-        # our interactor styles (we could add joystick or something too)
-        frame.view3d._cInteractorStyle = vtk.vtkInteractorStyleTrackballCamera()
-        # set the default
-        frame.view3d.SetInteractorStyle(frame.view3d._cInteractorStyle)
-        frame.view3d.Unbind(wx.EVT_MOUSEWHEEL)
-        frame.view3d.Bind(wx.EVT_MOUSEWHEEL, self._handler_mousewheel)        
+            # setup the Side Renderer (id: 2)
+            self.renderer_side = vtk.vtkRenderer()
+            self.renderer_side.SetBackground(0.19,0.19,0.19)
+            frame.side.GetRenderWindow().AddRenderer(self.renderer_side)
+            self.slice_viewer_side = CMSliceViewer(frame.side, self.renderer_side)
+            self.slice_viewer_side.set_parallel()
 
-        # frame.front.Disable()
-        # frame.top.Disable()
-        # frame.side.Disable()
+            # setup the Front Renderer (id: 3)
+            self.renderer_front = vtk.vtkRenderer()
+            self.renderer_front.SetBackground(0.19,0.19,0.19)
+            frame.front.GetRenderWindow().AddRenderer(self.renderer_front)
+            self.slice_viewer_front = CMSliceViewer(frame.front, self.renderer_front)
+            self.slice_viewer_front.set_parallel()
 
-        self.ren2 = vtk.vtkRenderer()
-        self.ren2.SetBackground(0.19,0.19,0.19)
-        frame.front.GetRenderWindow().AddRenderer(self.ren2)
-        self.slice_viewer1 = CMSliceViewer(frame.front, self.ren2)
-        self.slice_viewer1.set_parallel()
+            # setup the 3D Renderer (id: 4)
+            self.contour_actor = vtk.vtkActor()
+            self.contour_selected_actor = vtk.vtkActor()
 
-        self.ren3 = vtk.vtkRenderer()
-        self.ren3.SetBackground(0.19,0.19,0.19)
-        frame.top.GetRenderWindow().AddRenderer(self.ren3)
-        self.slice_viewer2 = CMSliceViewer(frame.top, self.ren3)
-        self.slice_viewer2.set_parallel()
-        
-        self.ren4 = vtk.vtkRenderer()
-        self.ren4.SetBackground(0.19,0.19,0.19)
-        frame.side.GetRenderWindow().AddRenderer(self.ren4)
-        self.slice_viewer3 = CMSliceViewer(frame.side, self.ren4)
-        self.slice_viewer3.set_parallel()
-        
+            self.contour_mapper = vtk.vtkPolyDataMapper()
+            self.contour_mapper.ScalarVisibilityOff()
+            self.contour_selected_mapper = vtk.vtkPolyDataMapper()
+            self.contour_selected_mapper.ScalarVisibilityOff()
 
-        #self.sync = SyncSliceViewers()
-        #self.sync.add_slice_viewer(self.slice_viewer1)
-        #self.sync.add_slice_viewer(self.slice_viewer2)
-        #self.sync.add_slice_viewer(self.slice_viewer3)
+            self.contour_actor.SetMapper(self.contour_mapper)
+            self.contour_actor.GetProperty().SetColor(0.6,0.6,0.6)
+            self.contour_actor.GetProperty().SetOpacity(0.8)
 
-        # hook up all event handlers
+            self.contour_selected_actor.SetMapper(self.contour_selected_mapper)
+            self.contour_selected_actor.GetProperty().SetColor(1,0,0) 
+
+            self.renderer_3d = vtk.vtkRenderer()
+            self.renderer_3d.SetBackground(0.62,0.62,0.62)
+            self.renderer_3d.AddActor(self.contour_actor)
+            frame.view3d.GetRenderWindow().AddRenderer(self.renderer_3d)
+            frame.view3d._outline_source = vtk.vtkOutlineSource()
+            om = vtk.vtkPolyDataMapper()
+            om.SetInput(frame.view3d._outline_source.GetOutput())
+            frame.view3d._outline_actor = vtk.vtkActor()
+            frame.view3d._outline_actor.SetMapper(om)
+            frame.view3d._orientation_widget.On()  
+            frame.view3d._cInteractorStyle = vtk.vtkInteractorStyleTrackballCamera()
+            frame.view3d.SetInteractorStyle(frame.view3d._cInteractorStyle)
+
+            # make our window appear (this is a viewer after all)
+            self.view()
+            # all modules should toggle this once they have shown their
+            # views. 
+            self.view_initialised = True
+
+            # apply config information to underlying logic
+            self.sync_module_logic_with_config()
+            # then bring it all the way up again to the view
+            self.sync_module_view_with_logic()
+            
+        # END OF _INIT_FRAME
+
+        _init_frame()
+        self._reset_frame()
         self._bind_events()
 
-        # anything you stuff into self._config will be saved
-        self._config.last_used_dir = ''
+    def _bind_events(self):
+        """Bind wx events to Python callable object event handlers.
+        """
+        vf = self._view_frame
+        
+        # bind onClickedAViewer
+        #vf.slice_viewer_top.Bind(wx.EVT_BUTTON, lambda evt: self._on_clicked_viewer(evt, 1))  
+        #vf.slice_viewer_side.Bind(wx.EVT_BUTTON, lambda evt: self._on_clicked_viewer(evt, 2))  
+        #vf.slice_viewer_front.Bind(wx.EVT_BUTTON, lambda evt: self._on_clicked_viewer(evt, 3))  
+        vf.view3d.Bind(wx.EVT_BUTTON, lambda evt: self._on_clicked_viewer(evt, 4))  
 
-        # make our window appear (this is a viewer after all)
-        self.view()
-        # all modules should toggle this once they have shown their
-        # views. 
-        self.view_initialised = True
+        # bind onScrollViewer
+        #vf.slice_viewer_top.Unbind(wx.EVT_MOUSEWHEEL)
+        #vf.slice_viewer_side.Unbind(wx.EVT_MOUSEWHEEL)
+        #vf.slice_viewer_front.Unbind(wx.EVT_MOUSEWHEEL)
+        vf.view3d.Unbind(wx.EVT_MOUSEWHEEL)
+        vf.view3d.Bind(wx.EVT_MOUSEWHEEL, lambda evt: self._on_scroll_viewer(evt, 4))  
 
-        # apply config information to underlying logic
-        self.sync_module_logic_with_config()
-        # then bring it all the way up again to the view
-        self.sync_module_view_with_logic()
+        # bind onChangeSliderSlice
+        vf.top_zoomer.Bind(wx.EVT_SLIDER, lambda evt: self._on_slide_slice(evt, 1))
+        vf.side_zoomer.Bind(wx.EVT_SLIDER, lambda evt: self._on_slide_slice(evt, 2))
+        vf.front_zoomer.Bind(wx.EVT_SLIDER, lambda evt: self._on_slide_slice(evt, 3))
 
-    def close(self):
-        """Clean-up method called on all DeVIDE modules when they are
-        deleted.
-        FIXME: Still get a nasty X error :(
+        # bind onChangeSliderToleranceLow
+        vf.lower_slider.Bind(wx.EVT_SCROLL_CHANGED, self._on_slide_tolderance_low)
+
+        # bind onChangeSliderToleranceHigh
+        vf.upper_slider.Bind(wx.EVT_SCROLL_CHANGED, self._on_slide_tolderance_high)
+
+        # bind onChangeSliderTransparency
+
+
+        # bind onChangeSelectionColor
+
+
+        # bind onCheckContinous
+
+
+        # bind onCheckTransparencyDistance
+
+
+        # bind onClickresetControls
+
+
+        # bind onClickresetViewer
+
+
+        # bind onClickFileButton
+        vf.filename_label.Bind(wx.EVT_BUTTON, self._on_clicked_btn_new_file)    
+
+    def _on_clicked_viewer(self, event, viewer_id):
+        if viewer_id == 1: # Top Viewer
+            return # TODO
+        elif viewer_id == 2: # Side Viewer
+            return # TODO
+        elif viewer_id == 3: # Front Viewer
+            return # TODO
+        elif  viewer_id == 4: # 3D Viewer
+            return # TODO
+
+    def _on_scroll_viewer(self, event, viewer_id):
+        if viewer_id == 1: # Top Viewer
+            return # TODO
+        elif viewer_id == 2: # Side Viewer
+            return # TODO
+        elif viewer_id == 3: # Front Viewer
+            return # TODO
+        elif viewer_id == 4: # 3D Viewer
+            # event.GetWheelRotation() is + or - 120 depending on
+            # direction of turning.
+            if event.ControlDown():
+                delta = 10
+            elif event.ShiftDown():
+                delta = 1
+            else:
+                # if user is NOT doing shift / control, we pass on to the
+                # default handling which will give control to the VTK
+                # mousewheel handlers.
+                self._view_frame.view3d.OnMouseWheel(event)
+                return
+                
+            selected_sds  = self.sliceDirections.getSelectedSliceDirections()
+            if len(selected_sds) == 0:
+                if len(self.sliceDirections._sliceDirectionsDict) == 1:
+                    # convenience: nothing selected, but there is only one SD, use that then!
+                    sd = self.sliceDirections._sliceDirectionsDict.items()[0][1]
+                else:
+                    return
+                
+            else:
+                sd = selected_sds[0]
+                
+            if event.GetWheelRotation() > 0:
+                sd.delta_slice(+delta)
+
+            else:
+                sd.delta_slice(-delta)
+
+        self.render()
+        #self.ipws[0].InvokeEvent('InteractionEvent')
+
+    def _on_slide_slice(self, event, viewer_id):
+        value = event.GetEventObject().GetValue()
+        sv = None
+        if viewer_id == 1: # Top Viewer
+            sv = self.slice_viewer_top
+        elif viewer_id == 2: # Side Viewer
+            sv = self.slice_viewer_side
+        elif viewer_id == 3: # Front Viewer
+            sv = self.slice_viewer_front
+
+        if not(sv == None):
+            sv.ipws[0].SetSliceIndex(value)
+        self.render()
+
+    def _on_slide_tolderance_low(self, event):
+        """Handler for slider adjustment (Lower Threshold)
+        """
+        if self.selectedData == None:
+            return
+        else:
+            return #TODO
+            #self.adjust_contour(self.lungVolume, contourValue, self.moderate_mapper)
+            #self.create_overlay(contourValue, self._view_frame.lower_slider.GetValue())
+
+    def _on_slide_tolderance_high(self, event):
+        """Handler for slider adjustment (Upper Threshold)
         """        
-        #THE FRAME (reference)
-        frame = self._view_frame
+        if self.selectedData == None:
+            return
+        else:  
+            return #TODO    
 
-        # with this complicated de-init, we make sure that VTK is 
-        # properly taken care of
-        self.ren.RemoveAllViewProps()
-        self.ren2.RemoveAllViewProps()
-        self.ren3.RemoveAllViewProps()
-        self.ren4.RemoveAllViewProps()
+    def _on_slide_transparency(self, event):
+        """Handler for slider adjustment (Transparency of unselected Actors)
+        """        
+        if self.selectedData == None:
+            return
+        else:  
+            return #TODO    
 
-        # this finalize makes sure we don't get any strange X
-        # errors when we kill the module.
-        self.slice_viewer1.close()
-        self.slice_viewer2.close()
-        self.slice_viewer3.close()
-        frame.view3d.GetRenderWindow().Finalize()
-        frame.view3d.SetRenderWindow(None)
-        frame.front.GetRenderWindow().Finalize()
-        frame.front.SetRenderWindow(None)
-        frame.top.GetRenderWindow().Finalize()
-        frame.top.SetRenderWindow(None)
-        frame.side.GetRenderWindow().Finalize()
-        frame.side.SetRenderWindow(None)
-        del frame.view3d
-        del frame.front
-        del frame.top
-        del frame.side
-        del self.slice_viewer3
-        del self.slice_viewer2
-        del self.slice_viewer1
-        # done with VTK de-init
+    def _on_check_continous(self, event):
+        """Handler for checkbox adjustment (Continous selection)
+        """        
+        if self.selectedData == None:
+            return
+        else:  
+            return #TODO    
 
-        # now take care of the wx window
-        frame.close()
-        # then shutdown our introspection mixin
-        IntrospectModuleMixin.close(self)
+    def _on_check_transparency_distane(self, event):
+        """Handler for checkbox adjustment (Unselected transparency by distance)
+        """        
+        if self.selectedData == None:
+            return
+        else:  
+            return #TODO    
 
-    def get_input_descriptions(self):
-        # define this as a tuple of input descriptions if you want to
-        # take input data e.g. return ('vtkPolyData', 'my kind of
-        # data')
+    def _on_clicked_btn_new_file(self, event):
+        """Handler for file opening
+        """
+        filters = 'Volume files (*.vti)|*.vti;'
+        dlg = wx.FileDialog(self._view_frame, "Please choose a VTI file", self._config.last_used_dir, "", filters, wx.OPEN)
+        if dlg.ShowModal() == wx.ID_OK:            
+            filename=dlg.GetFilename()
+            self._config.last_used_dir=dlg.GetDirectory()
+            full_file_path = "%s/%s" % (self._config.last_used_dir, filename)
+            self._load_data_from_file(full_file_path)
+        dlg.Destroy() 
 
-        # concatenate it num_inputs times (but these are shallow copies!)
-        return self._numDataInputs * ('vtkImageData',)
+    def _load_data_from_file(self, file_path):
+        """Loads scanvolume data from file. Also sets the volume as input for the sliceviewers
+        """
+        #self._view_frame.SetStatusText("Opening file: %s..." % (file_path))        
+        filename = os.path.split(file_path)[1]
+        fileBaseName = os.path.splitext(filename)[0]
 
-    def get_output_descriptions(self):
-        # define this as a tuple of output descriptions if you want to
-        # generate output data.
-        return ()
+        self._view_frame.filename = filename
+        self._view_frame.filename_label.SetLabel(filename)
 
-    
+        reader = vtk.vtkXMLImageDataReader()
+        reader.SetFileName(file_path)
+        reader.Update()
+
+        self.set_input(0, reader.GetOutput())
+
+        self.render()
+
+    def _on_clicked_btn_new_color(self, event):
+        """Handler for selecting a new color
+        """        
+        if self.selectedData == None:
+            return
+        else:  
+            return #TODO
+
+    def _reset_frame(self, event = None):
+        """Handler for resetting the frame
+        """
+        self._reset_controls()
+        self._reset_all_viewers
+
+    def _reset_controls(self, event = None):
+        """Handler for resetting the controls
+        """
+        return #TODO
+
+    def _reset_all_viewers(self, event = None):
+        """Handler for resetting all viewer
+        """        
+        _reset_viewer(1)
+        _reset_viewer(2)
+        _reset_viewer(3)
+        _reset_viewer(4)
+
+    def _reset_viewer(self, viewer_id, event = None):
+        """Handler for resetting a specific viewer
+        """
+        size = self._inputs[0]['inputData'].GetDimensions()
+        if viewer_id == 1: # Top Viewer
+            self._view_frame.top_zoomer.SetMax(size[2]-1)
+            self._view_frame.top_zoomer.SetValue(0)
+        elif viewer_id == 2: # Side Viewer
+            self._view_frame.side_zoomer.SetMax(size[0]-1)
+            self._view_frame.side_zoomer.SetValue(0)
+        elif viewer_id == 3: # Front Viewer
+            self._view_frame.front_zoomer.SetMax(size[1]-1)
+            self._view_frame.front_zoomer.SetValue(0)
+
+        self.slice_viewer1.reset_to_default_view(2)
+        self.slice_viewer2.reset_to_default_view(2)
+        self.slice_viewer3.reset_to_default_view(2)
+        orientations = [2, 0, 1]
+        for i, ipw in enumerate(self.slice_viewer1.ipws):
+                # ipw.SetPlaneOrientation(orientations[i]) # axial
+                ipw.SetSliceIndex(0)
+        self.render()
+
+        for i, ipw in enumerate(self.slice_viewer2.ipws):
+                # ipw.SetPlaneOrientation(orientations[i]) # axial
+                ipw.SetSliceIndex(0)
+        self.render()
+
+        for i, ipw in enumerate(self.slice_viewer3.ipws):
+                # ipw.SetPlaneOrientation(orientations[i]) # axial
+                ipw.SetSliceIndex(0)
+
+        _update_indicators()
+
+        self.render()
+        return #TODO
+
+    def _update_indicators(self):
+        """Handler for updating all indicators
+        """
+        return #TODO
 
     def set_input(self, idx, input_stream):
         # this gets called right before you get executed.  take the
@@ -246,7 +435,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             actions have to be performed.
             """
             # add outline actor and cube axes actor to renderer
-            self.ren.AddActor(self._view_frame.view3d._outline_actor)
+            self.renderer_3d.AddActor(self._view_frame.view3d._outline_actor)
             self._view_frame.view3d._outline_actor.PickableOff()
             #self.ren.AddActor(self._cube_axes_actor2d)
             #self._cube_axes_actor2d.PickableOff()
@@ -359,6 +548,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             cam3.SetPosition(127, 1000, 127)
 
             # update our 3d renderer
+            #TODO do this in seperate function
             self._contourFilter = vtk.vtkContourFilter()
             self._config.iso_value = 128
             self._contourFilter.SetInput(input_stream)
@@ -386,39 +576,13 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                     self._inputs[idx]['inputData'] = input_stream
                     self._handler_reset_all(None)
                     self._reset_zoomers()
+            else:
+                print "ERROR: input_stream isn't vtkImageData!"
+        else:
+            print "ERROR: no input_stream!"
 
-    def get_output(self, idx):
-        # this can get called at any time when a consumer module wants
-        # you output data.
-        pass
-
-    def execute_module(self):
-        # when it's you turn to execute as part of a network
-        # execution, this gets called.
-        pass
-
-    def logic_to_config(self):
-        pass
-
-    def config_to_logic(self):
-        pass
-
-    def config_to_view(self):
-        pass
-
-    def view_to_config(self):
-        pass
-
-    def view(self):
-        self._view_frame.Show()
-        self._view_frame.Raise()
-
-        # because we have an RWI involved, we have to do this
-        # SafeYield, so that the window does actually appear before we
-        # call the render.  If we don't do this, we get an initial
-        # empty renderwindow.
-        wx.SafeYield()
-        self.render()
+    def _calculate_selection(self):
+        return  #todo
 
     # def create_contour(self, contourValueModerate, contourValueSevere):
     #     """
@@ -487,194 +651,123 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
 
     #     self.selectedData = self._imageThreshold.GetOutput()
 
-    def adjust_contour(self, volume, contourValue, mapper):
-        """Adjust or create an isocontour using the Marching Cubes surface at the given 
-        value using the given mapper
-        """
-    	self._view_frame.SetStatusText("Calculating new volumerender...")
-    	contour = vtk.vtkMarchingCubes()
-    	contour.SetValue(0,contourValue)
-    	contour.SetInput(volume)
-    	mapper.SetInput(contour.GetOutput())
-    	mapper.Update()
-    	self.render()
-    	self._view_frame.SetStatusText("Calculated new volumerender")
-
-    def load_data_from_file(self, file_path):
-        """Loads scanvolume data from file. Also sets the volume as input for the sliceviewers
-        """
-        #self._view_frame.SetStatusText("Opening file: %s..." % (file_path))        
-        filename = os.path.split(file_path)[1]
-        fileBaseName =os.path.splitext(filename)[0]
-
-        self._view_frame.filename = filename
-        self._view_frame.filename_label.SetLabel(filename)
-
-        reader = vtk.vtkXMLImageDataReader()
-        reader.SetFileName(file_path)
-        reader.Update()
-
-        self.set_input(0, reader.GetOutput())
-
-        # self.image_data = reader.GetOutput()
-        # self.slice_viewer1.set_input(self.image_data)
-        # self.slice_viewer1.reset_camera()
-        # self.slice_viewer2.set_input(self.image_data)
-        # self.slice_viewer2.reset_camera()        
-        # self.slice_viewer3.set_input(self.image_data)
-        # self.slice_viewer3.reset_camera()
-        # self.slice_viewer1.ipws[0].SetPlaneOrientation(1)
-        # self.slice_viewer2.ipws[0].SetPlaneOrientation(2)
-        # self.slice_viewer3.ipws[0].SetPlaneOrientation(0)
-
-        # _reset_zoomers
-
-        self.render()
-        
-    def _bind_events(self):
-        """Bind wx events to Python callable object event handlers.
-        """
-
-        vf = self._view_frame
-
-        vf.filename_label.Bind(wx.EVT_BUTTON, self._handler_file_open)
-
-        vf.side_zoomer.Bind(wx.EVT_SLIDER, lambda evt: self._handler_zoom(evt, self.slice_viewer3))
-        vf.side_zoomer.Bind(wx.EVT_SLIDER, lambda evt: self._handler_zoom(evt, self.slice_viewer3))
-        vf.top_zoomer.Bind(wx.EVT_SLIDER, lambda evt: self._handler_zoom(evt, self.slice_viewer2))
-        vf.top_zoomer.Bind(wx.EVT_SLIDER, lambda evt: self._handler_zoom(evt, self.slice_viewer2))
-        vf.front_zoomer.Bind(wx.EVT_SLIDER, lambda evt: self._handler_zoom(evt, self.slice_viewer1))
-        vf.front_zoomer.Bind(wx.EVT_SLIDER, lambda evt: self._handler_zoom(evt, self.slice_viewer1))
-
-        # vf.upper_slider.Bind(wx.EVT_SCROLL, self._handler_tolerance_sync)
-        # vf.lower_slider.Bind(wx.EVT_SCROLL, self._handler_tolerance_sync)
-        vf.upper_slider.Bind(wx.EVT_SCROLL_CHANGED, self._handler_upper_tolerance)
-        vf.lower_slider.Bind(wx.EVT_SCROLL_CHANGED, self._handler_lower_tolerance)
-
-    def _handler_zoom(self, event, sv):
-        value = event.GetEventObject().GetValue()
-        sv.ipws[0].SetSliceIndex(value)
-        self.render()
-
-    def _handler_reset_camera(self, event):
-        """Reset the camera for the sliceviewer
-        """
-        event.GetEventObject().reset_camera()
-        self.render()
-
-    def _handler_reset_all(self, event):
-        """Reset all for the sliceviewers
-        """
-        self.slice_viewer1.reset_to_default_view(2)
-        self.slice_viewer2.reset_to_default_view(2)
-        self.slice_viewer3.reset_to_default_view(2)
-        orientations = [2, 0, 1]
-        for i, ipw in enumerate(self.slice_viewer1.ipws):
-                # ipw.SetPlaneOrientation(orientations[i]) # axial
-                ipw.SetSliceIndex(0)
-        self.render()
-
-        for i, ipw in enumerate(self.slice_viewer2.ipws):
-                # ipw.SetPlaneOrientation(orientations[i]) # axial
-                ipw.SetSliceIndex(0)
-        self.render()
-
-        for i, ipw in enumerate(self.slice_viewer3.ipws):
-                # ipw.SetPlaneOrientation(orientations[i]) # axial
-                ipw.SetSliceIndex(0)
-        self.render()
-
-    def _reset_zoomers(self):
-        """Reset the zoom-sliders for each slicePane
-        """
-        size = self._inputs[0]['inputData'].GetDimensions()
-        self._view_frame.side_zoomer.SetMax(size[0]-1)
-        self._view_frame.top_zoomer.SetMax(size[2]-1)
-        self._view_frame.front_zoomer.SetMax(size[1]-1)
-        self._view_frame.side_zoomer.SetValue(0)
-        self._view_frame.top_zoomer.SetValue(0)
-        self._view_frame.front_zoomer.SetValue(0)
-
-    def _handler_file_open(self, event):
-        """Handler for file opening
-        """
-        filters = 'Volume files (*.vti)|*.vti;'
-        dlg = wx.FileDialog(self._view_frame, "Please choose a VTI file", self._config.last_used_dir, "", filters, wx.OPEN)
-        if dlg.ShowModal() == wx.ID_OK:            
-            filename=dlg.GetFilename()
-            self._config.last_used_dir=dlg.GetDirectory()
-            full_file_path = "%s/%s" % (self._config.last_used_dir, filename)
-            self.load_data_from_file(full_file_path)
-        dlg.Destroy()
-
-    # def _handler_tolerance_sync(self, event):
-    #     """Handler for slider adjustment (Lower Threshold)
+    # def adjust_contour(self, volume, contourValue, mapper):
+    #     """Adjust or create an isocontour using the Marching Cubes surface at the given 
+    #     value using the given mapper
     #     """
-    #     lowerValue = self._view_frame.lower_slider.GetValue()
-    #     upperValue = self._view_frame.upper_slider.GetValue()
-    #     if lowerValue > upperValue:
-    #         self._view_frame.upper_slider.SetValue(lowerValue)
-    #     if upperValue < lowerValue:
-    #         self._view_frame.lower_slider.SetValue(upperValue)
+    # 	self._view_frame.SetStatusText("Calculating new volumerender...")
+    # 	contour = vtk.vtkMarchingCubes()
+    # 	contour.SetValue(0,contourValue)
+    # 	contour.SetInput(volume)
+    # 	mapper.SetInput(contour.GetOutput())
+    # 	mapper.Update()
+    # 	self.render()
+    # 	self._view_frame.SetStatusText("Calculated new volumerender")      
 
-    def _handler_lower_tolerance(self, event):
-        """Handler for slider adjustment (Lower Threshold)
-        """
-        if self.selectedData == None:
-            return
-        else:
-            return #TODO
-            #self.adjust_contour(self.lungVolume, contourValue, self.moderate_mapper)
-            #self.create_overlay(contourValue, self._view_frame.lower_slider.GetValue())
+    ###################################################################################
+    #   _____ _______ ____  _____    _____  ______          _____ _____ _   _  _____  #
+    #  / ____|__   __/ __ \|  __ \  |  __ \|  ____|   /\   |  __ \_   _| \ | |/ ____| #
+    # | (___    | | | |  | | |__) | | |__) | |__     /  \  | |  | || | |  \| | |  __  #
+    #  \___ \   | | | |  | |  ___/  |  _  /|  __|   / /\ \ | |  | || | | . ` | | |_ | #
+    #  ____) |  | | | |__| | |      | | \ \| |____ / ____ \| |__| || |_| |\  | |__| | #
+    # |_____/   |_|  \____/|_|      |_|  \_\______/_/    \_\_____/_____|_| \_|\_____| #
+    #                                                                                 #
+    ###################################################################################
 
-    def _handler_upper_tolerance(self, event):
-        """Handler for slider adjustment (Upper Threshold)
-        """        
-        if self.selectedData == None:
-	    	return
-        else:  
-            return #TODO      
+    def view(self):
+        self._view_frame.Show()
+        self._view_frame.Raise()
+
+        # because we have an RWI involved, we have to do this
+        # SafeYield, so that the window does actually appear before we
+        # call the render.  If we don't do this, we get an initial
+        # empty renderwindow.
+        wx.SafeYield()
+        self.render()
 
     def render(self):
         """Method that calls Render() on the embedded RenderWindow.
         Use this after having made changes to the scene.
         """
         self._view_frame.render()
-        self.ren.Render()
-        self.slice_viewer1.render()
-        self.slice_viewer2.render()
-        self.slice_viewer3.render()
+        self.renderer_3d.Render()
+        self.slice_viewer_top.render()
+        self.slice_viewer_side.render()
+        self.slice_viewer_front.render()
 
-    def _handler_mousewheel(self, event):
-        # event.GetWheelRotation() is + or - 120 depending on
-        # direction of turning.
-        if event.ControlDown():
-            delta = 10
-        elif event.ShiftDown():
-            delta = 1
-        else:
-            # if user is NOT doing shift / control, we pass on to the
-            # default handling which will give control to the VTK
-            # mousewheel handlers.
-            self._view_frame.view3d.OnMouseWheel(event)
-            return
-            
-        selected_sds  = self.sliceDirections.getSelectedSliceDirections()
-        if len(selected_sds) == 0:
-            if len(self.sliceDirections._sliceDirectionsDict) == 1:
-                # convenience: nothing selected, but there is only one SD, use that then!
-                sd = self.sliceDirections._sliceDirectionsDict.items()[0][1]
-            else:
-                return
-            
-        else:
-            sd = selected_sds[0]
-            
-        if event.GetWheelRotation() > 0:
-            sd.delta_slice(+delta)
+    def get_input_descriptions(self):
+        # define this as a tuple of input descriptions if you want to
+        # take input data e.g. return ('vtkPolyData', 'my kind of
+        # data')
 
-        else:
-            sd.delta_slice(-delta)
+        # concatenate it num_inputs times (but these are shallow copies!)
+        return self._numDataInputs * ('vtkImageData',)
 
-        self.render()
-        #self.ipws[0].InvokeEvent('InteractionEvent')
+    def get_output_descriptions(self):
+        # define this as a tuple of output descriptions if you want to
+        # generate output data.
+        return ()
+
+    def get_output(self, idx):
+        # this can get called at any time when a consumer module wants
+        # you output data.
+        pass
+
+    def execute_module(self):
+        # when it's you turn to execute as part of a network
+        # execution, this gets called.
+        pass
+
+    def logic_to_config(self):
+        pass
+
+    def config_to_logic(self):
+        pass
+
+    def config_to_view(self):
+        pass
+
+    def view_to_config(self):
+        pass
+
+    def close(self):
+        """Clean-up method called on all DeVIDE modules when they are
+        deleted.
+        FIXME: Still get a nasty X error :(
+        """        
+        #THE FRAME (reference)
+        frame = self._view_frame
+
+        # with this complicated de-init, we make sure that VTK is 
+        # properly taken care of
+        self.ren.RemoveAllViewProps()
+        self.ren2.RemoveAllViewProps()
+        self.ren3.RemoveAllViewProps()
+        self.ren4.RemoveAllViewProps()
+
+        # this finalize makes sure we don't get any strange X
+        # errors when we kill the module.
+        self.slice_viewer1.close()
+        self.slice_viewer2.close()
+        self.slice_viewer3.close()
+        frame.view3d.GetRenderWindow().Finalize()
+        frame.view3d.SetRenderWindow(None)
+        frame.front.GetRenderWindow().Finalize()
+        frame.front.SetRenderWindow(None)
+        frame.top.GetRenderWindow().Finalize()
+        frame.top.SetRenderWindow(None)
+        frame.side.GetRenderWindow().Finalize()
+        frame.side.SetRenderWindow(None)
+        del frame.view3d
+        del frame.front
+        del frame.top
+        del frame.side
+        del self.slice_viewer3
+        del self.slice_viewer2
+        del self.slice_viewer1
+        # done with VTK de-init
+
+        # now take care of the wx window
+        frame.close()
+        # then shutdown our introspection mixin
+        IntrospectModuleMixin.close(self)
