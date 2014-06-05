@@ -245,7 +245,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
 
         tl_sizer = wx.BoxSizer(wx.VERTICAL)
         tl_sizer.Add(self.view3d, 1, wx.EXPAND)
-        tl_sizer.Add(self.reset_view3d)
+        tl_sizer.Add(self.reset_view3d, 0, wx.EXPAND)
 
         panel.SetSizer(tl_sizer)
         tl_sizer.Fit(panel)
