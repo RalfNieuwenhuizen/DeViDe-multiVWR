@@ -64,13 +64,15 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         panel.SetBackgroundColour('#AAAAAA') 
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.SetMinSize(wx.Size(200,600))
+        font_title = wx.Font(12, wx.DEFAULT, wx.NORMAL, wx.BOLD)
 
         #FILE
         file_box = wx.BoxSizer(wx.VERTICAL)
 
-        self.filename = "<from network>"
+        self.filename = "NO INPUT"
         
-        file_label = wx.StaticText(panel, -1, "VTI FILE" , wx.Point(0, 0))
+        file_label = wx.StaticText(panel, -1, "VTI File" , wx.Point(0, 0))
+        file_label.SetFont(font_title)
         self.filename_label = wx.Button(panel, -1, self.filename , wx.Point(0, 0))
         file_box.Add(file_label)
         file_box.Add(self.filename_label)
@@ -79,13 +81,17 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         selection_box = wx.BoxSizer(wx.VERTICAL)
         
         selection_label = wx.StaticText(panel, -1, "Selection:" , wx.Point(0, 0))
+        selection_label.SetFont(font_title)
         selection_box.Add(selection_label)
 
-        color_label = wx.StaticText(panel, -1, "Color" , wx.Point(0, 0))
-        selection_box.Add(color_label)
+        self.selection_color = '#00FF00'
+        self.color_label = wx.Button(panel, -1, "Color" , wx.Point(0, 0))
+        selection_box.Add(self.color_label)
+        self.color_label.SetBackgroundColour(self.selection_color)
 
         #tolerance
         tolerance_label = wx.StaticText(panel, -1, "Tolerance" , wx.Point(0, 0))
+        tolerance_label.SetFont(wx.Font(8, wx.DEFAULT, wx.NORMAL, wx.BOLD))
         selection_box.Add(tolerance_label)
 
         self.lower_slider = wx.Slider(panel, -1, 0, -100, 0, (0, 0), (200, 50),wx.SL_HORIZONTAL | wx.SL_LABELS)
@@ -100,14 +106,15 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
 
 
         #continuous_label = wx.StaticText(panel, -1, "Continuous" , wx.Point(0, 0))
-        continuous_check = wx.CheckBox(panel, -1, "Continuous" , wx.Point(0, 0))
+        self.continuous_check = wx.CheckBox(panel, -1, "Continuous" , wx.Point(0, 0))
         #selection_box.Add(continuous_label)
-        selection_box.Add(continuous_check)
+        selection_box.Add(self.continuous_check)
 
         #UNSELECTED
         unselected_box = wx.BoxSizer(wx.VERTICAL)
         
         unselected_label = wx.StaticText(panel, -1, "Unselected:" , wx.Point(0, 0))
+        unselected_label.SetFont(font_title)
         unselected_box.Add(unselected_label)
 
         self.transparency_slider = wx.Slider(panel, -1, 50, 0, 100, (0, 0), (200, 50),wx.SL_HORIZONTAL | wx.SL_LABELS)
@@ -117,16 +124,26 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         unselected_box.Add(self.transparency_slider)
 
         #transparencybydistance_label = wx.StaticText(panel, -1, "Transparency by distance" , wx.Point(0, 0))
-        transparencybydistance_check = wx.CheckBox(panel, -1, "Transparency by distance" , wx.Point(0, 0))
+        self.transparencybydistance_check = wx.CheckBox(panel, -1, "Transparency by distance" , wx.Point(0, 0))
         #unselected_box.Add(transparencybydistance_label)
-        unselected_box.Add(transparencybydistance_check)
-  
-        sizer.Add(file_box, 1, wx.ALL|wx.EXPAND, 7)
-        sizer.Add(selection_box, 3, wx.ALL|wx.EXPAND, 7)
-        sizer.Add(unselected_box, 3, wx.ALL|wx.EXPAND, 7)
+        unselected_box.Add(self.transparencybydistance_check)
+
+        #RESET        
+        reset_box = wx.BoxSizer(wx.VERTICAL)
+        self.reset_controls_button = wx.Button(panel, -1, "Reset Settings" , wx.Point(0, 0))
+        reset_box.Add(self.reset_controls_button, 1, wx.EXPAND)
+        self.reset_controls_button.Bind(wx.EVT_BUTTON, self._reset_controls)
+
+        #Sizing
+        sizer.Add(file_box, 1, wx.BOTTOM|wx.EXPAND, 7)
+        sizer.Add(selection_box, 5, wx.BOTTOM|wx.EXPAND, 7)
+        sizer.Add(unselected_box, 5, wx.BOTTOM|wx.EXPAND, 7)
+        sizer.Add(reset_box, 0, wx.EXPAND)
 
         panel.SetSizer(sizer)
         sizer.Fit(panel)
+
+        self._reset_controls()
 
         return panel
 
@@ -260,6 +277,15 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         # make sure interaction is off; when on, interaction with
         # software raycasters is greatly slowed down!
         view3d._orientation_widget.InteractiveOff()
+
+    def _reset_controls(self, event = None):
+        self.filename_label.SetLabel('NO INPUT')
+        self.color_label.SetBackgroundColour('#00FF00')
+        self.lower_slider.SetValue(-20)
+        self.upper_slider.SetValue(20)
+        self.continuous_check.SetValue(1)
+        self.transparency_slider.SetValue(20)
+        self.transparencybydistance_check.SetValue(0)
 
     def render(self):
         """Update embedded RWI, i.e. update the image.
