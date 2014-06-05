@@ -116,46 +116,18 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         frame.view3d.GetRenderWindow().AddRenderer(self.ren)
         self.ren.AddActor(self.contour_actor)
 
-        self._outline_source = vtk.vtkOutlineSource()
+        frame.view3d._outline_source = vtk.vtkOutlineSource()
         om = vtk.vtkPolyDataMapper()
-        om.SetInput(self._outline_source.GetOutput())
-        self._outline_actor = vtk.vtkActor()
-        self._outline_actor.SetMapper(om)
+        om.SetInput(frame.view3d._outline_source.GetOutput())
+        frame.view3d._outline_actor = vtk.vtkActor()
+        frame.view3d._outline_actor.SetMapper(om)
 
-         # setup orientation widget stuff
-        # NB NB NB: we switch interaction with this off later
-        # (InteractiveOff()), thus disabling direct translation and
-        # scaling.  If we DON'T do this, interaction with software 
-        # raycasters are greatly slowed down.
-        self._orientation_widget = vtk.vtkOrientationMarkerWidget()
+        frame.view3d._orientation_widget.On()
         
-        self._annotated_cube_actor = aca = vtk.vtkAnnotatedCubeActor()
-        #aca.TextEdgesOff()
-
-        aca.GetXMinusFaceProperty().SetColor(1,0,0)
-        aca.GetXPlusFaceProperty().SetColor(1,0,0)
-        aca.GetYMinusFaceProperty().SetColor(0,1,0)
-        aca.GetYPlusFaceProperty().SetColor(0,1,0)
-        aca.GetZMinusFaceProperty().SetColor(0,0,1)
-        aca.GetZPlusFaceProperty().SetColor(0,0,1)
-        
-        self._axes_actor = vtk.vtkAxesActor()
-
-        self._orientation_widget.SetInteractor(
-            frame.view3d)
-        self._orientation_widget.SetOrientationMarker(
-            self._axes_actor)
-        self._orientation_widget.On()
-       
-        # make sure interaction is off; when on, interaction with
-        # software raycasters is greatly slowed down!
-        self._orientation_widget.InteractiveOff()
-
-
         # our interactor styles (we could add joystick or something too)
-        self._cInteractorStyle = vtk.vtkInteractorStyleTrackballCamera()
+        frame.view3d._cInteractorStyle = vtk.vtkInteractorStyleTrackballCamera()
         # set the default
-        frame.view3d.SetInteractorStyle(self._cInteractorStyle)
+        frame.view3d.SetInteractorStyle(frame.view3d._cInteractorStyle)
         frame.view3d.Unbind(wx.EVT_MOUSEWHEEL)
         frame.view3d.Bind(wx.EVT_MOUSEWHEEL, self._handler_mousewheel)        
 
@@ -272,8 +244,8 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             actions have to be performed.
             """
             # add outline actor and cube axes actor to renderer
-            self.ren.AddActor(self._outline_actor)
-            self._outline_actor.PickableOff()
+            self.ren.AddActor(self._view_frame.view3d._outline_actor)
+            self._view_frame.view3d._outline_actor.PickableOff()
             #self.ren.AddActor(self._cube_axes_actor2d)
             #self._cube_axes_actor2d.PickableOff()
             # FIXME: make this toggle-able

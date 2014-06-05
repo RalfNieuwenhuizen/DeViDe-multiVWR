@@ -11,6 +11,7 @@
 import cStringIO
 from vtk.wx.wxVTKRenderWindowInteractor import wxVTKRenderWindowInteractor
 import wx
+import vtk
 
 # one could have loaded a wxGlade created resource like this:
 #from resources.python import DICOMBrowserPanels
@@ -232,7 +233,33 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         panel.SetSizer(tl_sizer)
         tl_sizer.Fit(panel)
 
+        self._create_orientation_widget(self.view3d)
+
         return panel
+
+    def _create_orientation_widget(self, view3d):
+        """setup orientation widget stuff
+        """
+        view3d._orientation_widget = vtk.vtkOrientationMarkerWidget()
+        
+        view3d._annotated_cube_actor = aca = vtk.vtkAnnotatedCubeActor()
+
+        aca.GetXMinusFaceProperty().SetColor(1,0,0)
+        aca.GetXPlusFaceProperty().SetColor(1,0,0)
+        aca.GetYMinusFaceProperty().SetColor(0,1,0)
+        aca.GetYPlusFaceProperty().SetColor(0,1,0)
+        aca.GetZMinusFaceProperty().SetColor(0,0,1)
+        aca.GetZPlusFaceProperty().SetColor(0,0,1)
+        
+        view3d._axes_actor = vtk.vtkAxesActor()
+
+        view3d._orientation_widget.SetInteractor(view3d)
+        view3d._orientation_widget.SetOrientationMarker(view3d._axes_actor)
+        view3d._orientation_widget.On()
+       
+        # make sure interaction is off; when on, interaction with
+        # software raycasters is greatly slowed down!
+        view3d._orientation_widget.InteractiveOff()
 
     def render(self):
         """Update embedded RWI, i.e. update the image.
