@@ -67,29 +67,6 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         the required setup actions.
         """
 
-        # we record the setting here, in case the user changes it
-        # during the lifetime of this model, leading to different
-        # states at init and shutdown.
-        self.IMAGE_VIEWER = IMAGE_VIEWER
-
-	    # we need all this for our contours
-        self.selectedData = None
-
-        self.contour_actor = vtk.vtkActor()
-        self.contour_selected_actor = vtk.vtkActor()
-
-        self.contour_mapper = vtk.vtkPolyDataMapper()
-        self.contour_mapper.ScalarVisibilityOff()
-        self.contour_selected_mapper = vtk.vtkPolyDataMapper()
-        self.contour_selected_mapper.ScalarVisibilityOff()
-
-        self.contour_actor.SetMapper(self.contour_mapper)
-        self.contour_actor.GetProperty().SetColor(0.6,0.6,0.6)
-
-        self.contour_selected_actor.SetMapper(self.contour_selected_mapper)
-        self.contour_selected_actor.GetProperty().SetColor(1,0,0) 
-        self.contour_selected_actor.GetProperty().SetOpacity(0.8)
-
         # call base constructor
         ModuleBase.__init__(self, module_manager)        
         self._numDataInputs = self.NUM_INPUTS
@@ -107,6 +84,31 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         #THE FRAME (reference)
         frame = self._view_frame
         frame.SetTitle('multiDirectionalSlicedViewSegmentation3dVieWeR')
+
+        # we record the setting here, in case the user changes it
+        # during the lifetime of this model, leading to different
+        # states at init and shutdown.
+        self.IMAGE_VIEWER = IMAGE_VIEWER
+
+        # we need all this for our contours
+        self.selectedData = None
+
+        self.contour_actor = vtk.vtkActor()
+        self.contour_selected_actor = vtk.vtkActor()
+
+        self.contour_mapper = vtk.vtkPolyDataMapper()
+        self.contour_mapper.ScalarVisibilityOff()
+        self.contour_selected_mapper = vtk.vtkPolyDataMapper()
+        self.contour_selected_mapper.ScalarVisibilityOff()
+
+        self.contour_actor.SetMapper(self.contour_mapper)
+        self.contour_actor.GetProperty().SetColor(0.6,0.6,0.6)
+        self.contour_actor.GetProperty().SetOpacity(0.8)
+        SELF._view_frame
+
+        self.contour_selected_actor.SetMapper(self.contour_selected_mapper)
+        self.contour_selected_actor.GetProperty().SetColor(1,0,0) 
+
 
 
         # create the necessary VTK objects: we only need a renderer,
