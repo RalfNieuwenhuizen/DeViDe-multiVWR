@@ -373,7 +373,7 @@ class CMSliceViewer:
         a.PickableOff()
         self.outline_actor = a
 
-        self.dv_orientation_widget = DVOrientationWidget(view3d)
+        #self.dv_orientation_widget = DVOrientationWidget(view3d)
 
         # this can be used by clients to store the current world
         # position
@@ -397,7 +397,7 @@ class CMSliceViewer:
 
     def close(self):
         self.set_input(None)
-        self.dv_orientation_widget.close()
+        #self.dv_orientation_widget.close()
         self.set_overlay_input(None)
 
     def activate_slice(self, idx):
@@ -537,7 +537,7 @@ class CMSliceViewer:
             self.renderer.RemoveViewProp(self.outline_actor)
             self.outline_source.SetInput(None)
 
-            self.dv_orientation_widget.set_input(None)
+            #self.dv_orientation_widget.set_input(None)
 
             for ipw in self.ipws:
                 # argh, this disable causes a render
@@ -557,7 +557,7 @@ class CMSliceViewer:
                 ipw.SetSliceIndex(0)
                 ipw.SetEnabled(active[i])
 
-            self.dv_orientation_widget.set_input(input)
+            #self.dv_orientation_widget.set_input(input)
 
     # nnsmit-edit
     # FIXME: Create pretty fix for this codeclone.

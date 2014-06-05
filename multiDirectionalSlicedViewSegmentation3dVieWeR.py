@@ -75,12 +75,18 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
 	    # we need all this for our contours
         self.selectedData = None
 
+        self.contour_actor = vtk.vtkActor()
         self.contour_selected_actor = vtk.vtkActor()
 
         self.contour_mapper = vtk.vtkPolyDataMapper()
         self.contour_mapper.ScalarVisibilityOff()
+        self.contour_selected_mapper = vtk.vtkPolyDataMapper()
+        self.contour_selected_mapper.ScalarVisibilityOff()
 
-        self.contour_selected_actor.SetMapper(self.contour_mapper)
+        self.contour_actor.SetMapper(self.contour_mapper)
+        self.contour_actor.GetProperty().SetColor(0.6,0.6,0.6)
+
+        self.contour_selected_actor.SetMapper(self.contour_selected_mapper)
         self.contour_selected_actor.GetProperty().SetColor(1,0,0) 
         self.contour_selected_actor.GetProperty().SetOpacity(0.8)
 
@@ -108,6 +114,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         self.ren = vtk.vtkRenderer()
         self.ren.SetBackground(0.62,0.62,0.62)
         frame.view3d.GetRenderWindow().AddRenderer(self.ren)
+        self.ren.AddActor(self.contour_actor)
 
         self._outline_source = vtk.vtkOutlineSource()
         om = vtk.vtkPolyDataMapper()
@@ -175,7 +182,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         self.slice_viewer3.set_parallel()
         
 
-        self.sync = SyncSliceViewers()
+        #self.sync = SyncSliceViewers()
         #self.sync.add_slice_viewer(self.slice_viewer1)
         #self.sync.add_slice_viewer(self.slice_viewer2)
         #self.sync.add_slice_viewer(self.slice_viewer3)
@@ -377,9 +384,15 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             cam3.SetViewUp(0,0,-1)            
             cam3.SetPosition(127, 1000, 127)
 
-
             # update our 3d renderer
-            #self.create_contour(0,0)
+            self._contourFilter = vtk.vtkContourFilter()
+            self._config.iso_value = 128
+            self._contourFilter.SetInput(input_stream)
+            self._contourFilter.Update()
+            self.contour_mapper.SetInput(self._contourFilter.GetOutput())
+            self.contour_mapper.Update()
+            self.ren.ResetCamera()
+
             self.render()
 
             # end of function _handleImageData()
@@ -653,6 +666,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         Use this after having made changes to the scene.
         """
         self._view_frame.render()
+        self.ren.Render()
         self.slice_viewer1.render()
         self.slice_viewer2.render()
         self.slice_viewer3.render()
