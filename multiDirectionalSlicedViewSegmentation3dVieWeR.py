@@ -126,7 +126,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
 
             self.contour_actor.SetMapper(self.contour_mapper)
             self.contour_actor.GetProperty().SetColor(contour_color)
-            self.contour_actor.GetProperty().SetOpacity(frame.transparency_slider.GetValue() / 100)
+            self.contour_actor.GetProperty().SetOpacity(float(frame.transparency_slider.GetValue()) / 100)
 
             self.contour_selected_actor.SetMapper(self.contour_selected_mapper)
             self.contour_selected_actor.GetProperty().SetColor(frame.selection_color) 
@@ -146,8 +146,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
 
             # make our window appear (this is a viewer after all)
             self.view()
-            # all modules should toggle this once they have shown their
-            # views. 
+            # all modules should toggle this once they have shown their views. 
             self.view_initialised = True
 
             # apply config information to underlying logic
@@ -206,7 +205,10 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
 
 
         # bind onClickresetViewer
-
+        vf.reset_top.Bind(wx.EVT_BUTTON, lambda x: self._reset_viewer(1))
+        vf.reset_side.Bind(wx.EVT_BUTTON, lambda x: self._reset_viewer(2))
+        vf.reset_front.Bind(wx.EVT_BUTTON, lambda x: self._reset_viewer(3))
+        vf.reset_view3d.Bind(wx.EVT_BUTTON, lambda x: self._reset_viewer(4))
 
         # bind onClickFileButton
         vf.filename_label.Bind(wx.EVT_BUTTON, self._on_clicked_btn_new_file)    
@@ -360,7 +362,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         """Handler for resetting the frame
         """
         self._reset_controls()
-        self._reset_all_viewers
+        self._reset_all_viewers()
 
     def _reset_controls(self, event = None):
         """Handler for resetting the controls
@@ -370,46 +372,48 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
     def _reset_all_viewers(self, event = None):
         """Handler for resetting all viewer
         """        
-        _reset_viewer(1)
-        _reset_viewer(2)
-        _reset_viewer(3)
-        _reset_viewer(4)
+        self._reset_viewer(1)
+        self._reset_viewer(2)
+        self._reset_viewer(3)
+        self._reset_viewer(4)
 
     def _reset_viewer(self, viewer_id, event = None):
         """Handler for resetting a specific viewer
         """
-        size = self._inputs[0]['inputData'].GetDimensions()
-        if viewer_id == 1: # Top Viewer
-            self.frame.top_zoomer.SetMax(size[2]-1)
-            self.frame.top_zoomer.SetValue(0)
-        elif viewer_id == 2: # Side Viewer
-            self.frame.side_zoomer.SetMax(size[0]-1)
-            self.frame.side_zoomer.SetValue(0)
-        elif viewer_id == 3: # Front Viewer
-            self.frame.front_zoomer.SetMax(size[1]-1)
-            self.frame.front_zoomer.SetValue(0)
+        if self._inputs[0]['inputData'] == None:
+            return
+        else:
+            size = self._inputs[0]['inputData'].GetDimensions()
+            if viewer_id == 1: # Top Viewer
+                self.frame.top_zoomer.SetMax(size[2]-1)
+                self.frame.top_zoomer.SetValue(0)
+                self.slice_viewer_top.reset_to_default_view(2)
+                for i, ipw in enumerate(self.slice_viewer_top.ipws):
+                        # ipw.SetPlaneOrientation(orientations[i]) # axial
+                        ipw.SetSliceIndex(0)
+            elif viewer_id == 2: # Side Viewer
+                self.frame.side_zoomer.SetMax(size[0]-1)
+                self.frame.side_zoomer.SetValue(0)
+                self.slice_viewer_side.reset_to_default_view(2)
+                for i, ipw in enumerate(self.slice_viewer_side.ipws):
+                        # ipw.SetPlaneOrientation(orientations[i]) # axial
+                        ipw.SetSliceIndex(0)
+            elif viewer_id == 3: # Front Viewer
+                self.frame.front_zoomer.SetMax(size[1]-1)
+                self.frame.front_zoomer.SetValue(0)
+                self.slice_viewer_front.reset_to_default_view(2)
+                for i, ipw in enumerate(self.slice_viewer_front.ipws):
+                        # ipw.SetPlaneOrientation(orientations[i]) # axial
+                        ipw.SetSliceIndex(0)
 
-        self.slice_viewer1.reset_to_default_view(2)
-        self.slice_viewer2.reset_to_default_view(2)
-        self.slice_viewer3.reset_to_default_view(2)
-        orientations = [2, 0, 1]
-        for i, ipw in enumerate(self.slice_viewer1.ipws):
-                # ipw.SetPlaneOrientation(orientations[i]) # axial
-                ipw.SetSliceIndex(0)
-        self.render()
+            self._update_indicators()
 
-        for i, ipw in enumerate(self.slice_viewer2.ipws):
-                # ipw.SetPlaneOrientation(orientations[i]) # axial
-                ipw.SetSliceIndex(0)
-        self.render()
+            self.render()
+            return #TODO
 
-        for i, ipw in enumerate(self.slice_viewer3.ipws):
-                # ipw.SetPlaneOrientation(orientations[i]) # axial
-                ipw.SetSliceIndex(0)
-
-        _update_indicators()
-
-        self.render()
+    def _reset_zoomers(self):
+        """Handler for setting the camera zoomers to standard
+        """
         return #TODO
 
     def _update_indicators(self):
@@ -419,9 +423,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
 
     def set_input(self, idx, input_stream):
         # this gets called right before you get executed.  take the
-        # input_stream and store it so that it's available during
-        # execute_module()
-        #self._imageThreshold.SetInput(input_stream)
+        # input_stream and store it so that it's available during execute_module()
 
         def add_primary_init(input_stream):
             """After a new primary has been added, a number of other
@@ -517,26 +519,26 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                 #self._resetAll()
             
             #2d dinges
-            self.slice_viewer1.set_input(input_stream)
-            self.slice_viewer1.reset_camera()
-            self.slice_viewer2.set_input(input_stream)
-            self.slice_viewer2.reset_camera()
-            self.slice_viewer3.set_input(input_stream)
-            self.slice_viewer3.reset_camera()
-            self.slice_viewer1.ipws[0].SetPlaneOrientation(1)
-            self.slice_viewer2.ipws[0].SetPlaneOrientation(2)
-            self.slice_viewer3.ipws[0].SetPlaneOrientation(0)
+            self.slice_viewer_top.set_input(input_stream)
+            self.slice_viewer_top.reset_camera()
+            self.slice_viewer_side.set_input(input_stream)
+            self.slice_viewer_side.reset_camera()
+            self.slice_viewer_front.set_input(input_stream)
+            self.slice_viewer_front.reset_camera()
+            self.slice_viewer_top.ipws[0].SetPlaneOrientation(2)
+            self.slice_viewer_side.ipws[0].SetPlaneOrientation(0)
+            self.slice_viewer_front.ipws[0].SetPlaneOrientation(1)
 
-            self._handler_reset_all(None)
+            self._reset_all_viewers()
             self._reset_zoomers()
 
-            cam1 = self.slice_viewer1.renderer.GetActiveCamera()
+            cam1 = self.slice_viewer_top.renderer.GetActiveCamera()
             cam1.SetViewUp(0,-1,0)            
             cam1.SetPosition(127, 127, 1000)
-            cam2 = self.slice_viewer2.renderer.GetActiveCamera()
+            cam2 = self.slice_viewer_side.renderer.GetActiveCamera()
             cam2.SetViewUp(-1,-1,0)            
             cam2.SetPosition(1000, 127, 127)
-            cam3 = self.slice_viewer3.renderer.GetActiveCamera()
+            cam3 = self.slice_viewer_front.renderer.GetActiveCamera()
             cam3.SetViewUp(0,0,-1)            
             cam3.SetPosition(127, 1000, 127)
 
@@ -562,12 +564,12 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                 else:
                     # take necessary actions to refresh
                     prevData = self._inputs[idx]['inputData']
-                    self.slice_viewer1.set_input(input_stream)
-                    self.slice_viewer2.set_input(input_stream)
-                    self.slice_viewer3.set_input(input_stream)
+                    self.slice_viewer_top.set_input(input_stream)
+                    self.slice_viewer_side.set_input(input_stream)
+                    self.slice_viewer_front.set_input(input_stream)
                     # record it in our main structure
                     self._inputs[idx]['inputData'] = input_stream
-                    self._handler_reset_all(None)
+                    self._reset_all_viewers()
                     self._reset_zoomers()
             else:
                 print "ERROR: input_stream isn't vtkImageData!"

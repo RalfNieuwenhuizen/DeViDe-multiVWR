@@ -176,35 +176,6 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
 
         return panel
 
-    def _create_front_pane(self):
-        """Create a RenderWindowInteractor for the front-view data
-        """
-        panel = wx.Panel(self, -1)
-
-        self.front = wxVTKRenderWindowInteractor(panel, -1, (400,400))
-        self.front_zoomer = wx.Slider(panel, -1, 0, 0, 100, (0, 0), (20, 400), wx.SL_VERTICAL)
-
-        label = wx.StaticText(panel, -1, "Coronal (Front view)" , wx.Point(0, 0))
-        self.reset_front = wx.Button(panel, -1, "Reset Camera")
-
-        #Sizers
-        sizer = wx.BoxSizer(wx.VERTICAL)
-
-        sizer_top = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_top.Add(self.front, 1, wx.EXPAND)
-        sizer_top.Add(self.front_zoomer, 0, wx.EXPAND)
-        sizer.Add(sizer_top, 1, wx.EXPAND)
-
-        sizer_bottom = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_bottom.Add(label, 1, wx.ALIGN_CENTER)
-        sizer_bottom.Add(self.reset_front, 1, wx.ALIGN_RIGHT)
-        sizer.Add(sizer_bottom, 0, wx.EXPAND)
-
-        panel.SetSizer(sizer)
-        sizer.Fit(panel)
-
-        return panel
-
     def _create_side_pane(self):
         """Create a RenderWindowInteractor for the side-view data
         """        
@@ -227,6 +198,35 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         sizer_bottom = wx.BoxSizer(wx.HORIZONTAL)
         sizer_bottom.Add(label, 1, wx.ALIGN_CENTER)
         sizer_bottom.Add(self.reset_side, 1, wx.ALIGN_RIGHT)
+        sizer.Add(sizer_bottom, 0, wx.EXPAND)
+
+        panel.SetSizer(sizer)
+        sizer.Fit(panel)
+
+        return panel
+
+    def _create_front_pane(self):
+        """Create a RenderWindowInteractor for the front-view data
+        """
+        panel = wx.Panel(self, -1)
+
+        self.front = wxVTKRenderWindowInteractor(panel, -1, (400,400))
+        self.front_zoomer = wx.Slider(panel, -1, 0, 0, 100, (0, 0), (20, 400), wx.SL_VERTICAL)
+
+        label = wx.StaticText(panel, -1, "Coronal (Front view)" , wx.Point(0, 0))
+        self.reset_front = wx.Button(panel, -1, "Reset Camera")
+
+        #Sizers
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        sizer_top = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_top.Add(self.front, 1, wx.EXPAND)
+        sizer_top.Add(self.front_zoomer, 0, wx.EXPAND)
+        sizer.Add(sizer_top, 1, wx.EXPAND)
+
+        sizer_bottom = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_bottom.Add(label, 1, wx.ALIGN_CENTER)
+        sizer_bottom.Add(self.reset_front, 1, wx.ALIGN_RIGHT)
         sizer.Add(sizer_bottom, 0, wx.EXPAND)
 
         panel.SetSizer(sizer)
