@@ -129,7 +129,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             self.contour_actor.GetProperty().SetOpacity(1 - (float(frame.transparency_slider.GetValue()) / 100))
 
             self.contour_selected_actor.SetMapper(self.contour_selected_mapper)
-            self.contour_selected_actor.GetProperty().SetColor(frame.selection_color) 
+            self.contour_selected_actor.GetProperty().SetColor(frame.color_picker.GetColour()) 
 
             self.renderer_3d = vtk.vtkRenderer()
             self.renderer_3d.SetBackground(threeD_bg_color)
@@ -196,13 +196,10 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
 
 
         # bind onCheckContinuous
-
+        vf.continuous_check.Bind(wx.EVT_CHECKBOX, self._on_check_continuous)
 
         # bind onCheckTransparencyDistance
-
-
-        # bind onClickresetControls
-
+        vf.transparencybydistance_check.Bind(wx.EVT_CHECKBOX, self._on_check_transparency_distance)
 
         # bind onClickresetViewer
         vf.reset_top.Bind(wx.EVT_BUTTON, lambda x: self._reset_viewer(1))
@@ -309,7 +306,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         else:  
             return #TODO    
 
-    def _on_check_transparency_distane(self, event):
+    def _on_check_transparency_distance(self, event):
         """Handler for checkbox adjustment (Unselected transparency by distance)
         """        
         if self.selectedData == None:
