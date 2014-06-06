@@ -84,7 +84,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         selection_label.SetFont(font_title)
         selection_box.Add(selection_label)
 
-        self.selection_color = '#00FF00'
+        self.selection_color = (0,1,0)
         self.color_label = wx.Button(panel, -1, "Color" , wx.Point(0, 0))
         selection_box.Add(self.color_label)
         self.color_label.SetBackgroundColour(self.selection_color)

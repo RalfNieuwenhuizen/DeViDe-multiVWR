@@ -8,12 +8,6 @@
 # All rights reserved.
 # See COPYRIGHT for details.
 
-# skeleton of an AUI-based viewer module
-# copy and modify for your own purposes.
-
-# set to False for 3D viewer, True for 2D image viewer
-IMAGE_VIEWER = True
-
 # import the frame, i.e. the wx window containing everything
 import multiDirectionalSlicedViewSegmentation3dVieWeRFrame
 # and do a reload, so that the GUI is also updated at reloads of this
@@ -77,47 +71,46 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                            for i in range(self._numDataInputs)]
 
             # create the view frame
-            self._view_frame = module_utils.instantiate_module_view_frame(
+            self.frame = module_utils.instantiate_module_view_frame(
                 self, self._module_manager, 
                 multiDirectionalSlicedViewSegmentation3dVieWeRFrame.multiDirectionalSlicedViewSegmentation3dVieWeRFrame)
             
             #THE FRAME (reference)
-            frame = self._view_frame
+            frame = self.frame
 
             # change the title to something more spectacular (or at least something non-default)
             frame.SetTitle('multiDirectionalSlicedViewSegmentation3dVieWeR')
 
-            # we record the setting here, in case the user changes it
-            # during the lifetime of this model, leading to different
-            # states at init and shutdown.
-            self.IMAGE_VIEWER = IMAGE_VIEWER
-
-            # we need all this for our contours
+            # predefine this
             self.selectedData = None
 
             # anything you stuff into self._config will be saved
             self._config.last_used_dir = ''
 
-            # create the necessary VTK objects: we only need a renderer,
-            # the RenderWindowInteractor in the view3d has the rest.
+            #color definitions
+            twoD_bg_color = (0.19,0.19,0.19)
+            threeD_bg_color = (0.62,0.62,0.62)
+            contour_color = (0.6,0.6,0.6)
+
+            # create the necessary VTK objects
 
             # setup the Top Renderer (id: 1)
             self.renderer_top = vtk.vtkRenderer()
-            self.renderer_top.SetBackground(0.19,0.19,0.19)
+            self.renderer_top.SetBackground(twoD_bg_color)
             frame.top.GetRenderWindow().AddRenderer(self.renderer_top)
             self.slice_viewer_top = CMSliceViewer(frame.top, self.renderer_top)
             self.slice_viewer_top.set_parallel()
         
             # setup the Side Renderer (id: 2)
             self.renderer_side = vtk.vtkRenderer()
-            self.renderer_side.SetBackground(0.19,0.19,0.19)
+            self.renderer_side.SetBackground(twoD_bg_color)
             frame.side.GetRenderWindow().AddRenderer(self.renderer_side)
             self.slice_viewer_side = CMSliceViewer(frame.side, self.renderer_side)
             self.slice_viewer_side.set_parallel()
 
             # setup the Front Renderer (id: 3)
             self.renderer_front = vtk.vtkRenderer()
-            self.renderer_front.SetBackground(0.19,0.19,0.19)
+            self.renderer_front.SetBackground(twoD_bg_color)
             frame.front.GetRenderWindow().AddRenderer(self.renderer_front)
             self.slice_viewer_front = CMSliceViewer(frame.front, self.renderer_front)
             self.slice_viewer_front.set_parallel()
@@ -132,14 +125,14 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             self.contour_selected_mapper.ScalarVisibilityOff()
 
             self.contour_actor.SetMapper(self.contour_mapper)
-            self.contour_actor.GetProperty().SetColor(0.6,0.6,0.6)
-            self.contour_actor.GetProperty().SetOpacity(0.8)
+            self.contour_actor.GetProperty().SetColor(contour_color)
+            self.contour_actor.GetProperty().SetOpacity(frame.transparency_slider.GetValue() / 100)
 
             self.contour_selected_actor.SetMapper(self.contour_selected_mapper)
-            self.contour_selected_actor.GetProperty().SetColor(1,0,0) 
+            self.contour_selected_actor.GetProperty().SetColor(frame.selection_color) 
 
             self.renderer_3d = vtk.vtkRenderer()
-            self.renderer_3d.SetBackground(0.62,0.62,0.62)
+            self.renderer_3d.SetBackground(threeD_bg_color)
             self.renderer_3d.AddActor(self.contour_actor)
             frame.view3d.GetRenderWindow().AddRenderer(self.renderer_3d)
             frame.view3d._outline_source = vtk.vtkOutlineSource()
@@ -171,7 +164,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
     def _bind_events(self):
         """Bind wx events to Python callable object event handlers.
         """
-        vf = self._view_frame
+        vf = self.frame
         
         # bind onClickedAViewer
         #vf.slice_viewer_top.Bind(wx.EVT_BUTTON, lambda evt: self._on_clicked_viewer(evt, 1))  
@@ -192,10 +185,10 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         vf.front_zoomer.Bind(wx.EVT_SLIDER, lambda evt: self._on_slide_slice(evt, 3))
 
         # bind onChangeSliderToleranceLow
-        vf.lower_slider.Bind(wx.EVT_SCROLL_CHANGED, self._on_slide_tolderance_low)
+        vf.lower_slider.Bind(wx.EVT_SCROLL_CHANGED, self._on_slide_tolerance_low)
 
         # bind onChangeSliderToleranceHigh
-        vf.upper_slider.Bind(wx.EVT_SCROLL_CHANGED, self._on_slide_tolderance_high)
+        vf.upper_slider.Bind(wx.EVT_SCROLL_CHANGED, self._on_slide_tolerance_high)
 
         # bind onChangeSliderTransparency
 
@@ -203,7 +196,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         # bind onChangeSelectionColor
 
 
-        # bind onCheckContinous
+        # bind onCheckContinuous
 
 
         # bind onCheckTransparencyDistance
@@ -246,7 +239,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                 # if user is NOT doing shift / control, we pass on to the
                 # default handling which will give control to the VTK
                 # mousewheel handlers.
-                self._view_frame.view3d.OnMouseWheel(event)
+                self.frame.view3d.OnMouseWheel(event)
                 return
                 
             selected_sds  = self.sliceDirections.getSelectedSliceDirections()
@@ -283,7 +276,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             sv.ipws[0].SetSliceIndex(value)
         self.render()
 
-    def _on_slide_tolderance_low(self, event):
+    def _on_slide_tolerance_low(self, event):
         """Handler for slider adjustment (Lower Threshold)
         """
         if self.selectedData == None:
@@ -291,9 +284,9 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         else:
             return #TODO
             #self.adjust_contour(self.lungVolume, contourValue, self.moderate_mapper)
-            #self.create_overlay(contourValue, self._view_frame.lower_slider.GetValue())
+            #self.create_overlay(contourValue, self.frame.lower_slider.GetValue())
 
-    def _on_slide_tolderance_high(self, event):
+    def _on_slide_tolerance_high(self, event):
         """Handler for slider adjustment (Upper Threshold)
         """        
         if self.selectedData == None:
@@ -309,7 +302,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         else:  
             return #TODO    
 
-    def _on_check_continous(self, event):
+    def _on_check_continuous(self, event):
         """Handler for checkbox adjustment (Continous selection)
         """        
         if self.selectedData == None:
@@ -329,7 +322,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         """Handler for file opening
         """
         filters = 'Volume files (*.vti)|*.vti;'
-        dlg = wx.FileDialog(self._view_frame, "Please choose a VTI file", self._config.last_used_dir, "", filters, wx.OPEN)
+        dlg = wx.FileDialog(self.frame, "Please choose a VTI file", self._config.last_used_dir, "", filters, wx.OPEN)
         if dlg.ShowModal() == wx.ID_OK:            
             filename=dlg.GetFilename()
             self._config.last_used_dir=dlg.GetDirectory()
@@ -340,12 +333,12 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
     def _load_data_from_file(self, file_path):
         """Loads scanvolume data from file. Also sets the volume as input for the sliceviewers
         """
-        #self._view_frame.SetStatusText("Opening file: %s..." % (file_path))        
+        #self.frame.SetStatusText("Opening file: %s..." % (file_path))        
         filename = os.path.split(file_path)[1]
         fileBaseName = os.path.splitext(filename)[0]
 
-        self._view_frame.filename = filename
-        self._view_frame.filename_label.SetLabel(filename)
+        self.frame.filename = filename
+        self.frame.filename_label.SetLabel(filename)
 
         reader = vtk.vtkXMLImageDataReader()
         reader.SetFileName(file_path)
@@ -387,14 +380,14 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         """
         size = self._inputs[0]['inputData'].GetDimensions()
         if viewer_id == 1: # Top Viewer
-            self._view_frame.top_zoomer.SetMax(size[2]-1)
-            self._view_frame.top_zoomer.SetValue(0)
+            self.frame.top_zoomer.SetMax(size[2]-1)
+            self.frame.top_zoomer.SetValue(0)
         elif viewer_id == 2: # Side Viewer
-            self._view_frame.side_zoomer.SetMax(size[0]-1)
-            self._view_frame.side_zoomer.SetValue(0)
+            self.frame.side_zoomer.SetMax(size[0]-1)
+            self.frame.side_zoomer.SetValue(0)
         elif viewer_id == 3: # Front Viewer
-            self._view_frame.front_zoomer.SetMax(size[1]-1)
-            self._view_frame.front_zoomer.SetValue(0)
+            self.frame.front_zoomer.SetMax(size[1]-1)
+            self.frame.front_zoomer.SetValue(0)
 
         self.slice_viewer1.reset_to_default_view(2)
         self.slice_viewer2.reset_to_default_view(2)
@@ -435,8 +428,8 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             actions have to be performed.
             """
             # add outline actor and cube axes actor to renderer
-            self.renderer_3d.AddActor(self._view_frame.view3d._outline_actor)
-            self._view_frame.view3d._outline_actor.PickableOff()
+            self.renderer_3d.AddActor(self.frame.view3d._outline_actor)
+            self.frame.view3d._outline_actor.PickableOff()
             #self.ren.AddActor(self._cube_axes_actor2d)
             #self._cube_axes_actor2d.PickableOff()
             # FIXME: make this toggle-able
@@ -555,7 +548,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             self._contourFilter.Update()
             self.contour_mapper.SetInput(self._contourFilter.GetOutput())
             self.contour_mapper.Update()
-            self.ren.ResetCamera()
+            self.renderer_3d.ResetCamera()
 
             self.render()
 
@@ -605,8 +598,8 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
     #         contourValueSevere = scalars[0]+range*severeFraction
     #         contourValueModerate = scalars[0]+range*moderateFraction
 
-    #         self._view_frame.upper_slider.SetValue(contourValueModerate)    
-    #         self._view_frame.lower_slider.SetValue(contourValueSevere)
+    #         self.frame.upper_slider.SetValue(contourValueModerate)    
+    #         self.frame.lower_slider.SetValue(contourValueSevere)
     #         self.create_overlay(contourValueModerate,contourValueSevere)
 
     #     # Create the contours
@@ -655,14 +648,14 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
     #     """Adjust or create an isocontour using the Marching Cubes surface at the given 
     #     value using the given mapper
     #     """
-    # 	self._view_frame.SetStatusText("Calculating new volumerender...")
+    # 	self.frame.SetStatusText("Calculating new volumerender...")
     # 	contour = vtk.vtkMarchingCubes()
     # 	contour.SetValue(0,contourValue)
     # 	contour.SetInput(volume)
     # 	mapper.SetInput(contour.GetOutput())
     # 	mapper.Update()
     # 	self.render()
-    # 	self._view_frame.SetStatusText("Calculated new volumerender")      
+    # 	self.frame.SetStatusText("Calculated new volumerender")      
 
     ###################################################################################
     #   _____ _______ ____  _____    _____  ______          _____ _____ _   _  _____  #
@@ -675,8 +668,8 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
     ###################################################################################
 
     def view(self):
-        self._view_frame.Show()
-        self._view_frame.Raise()
+        self.frame.Show()
+        self.frame.Raise()
 
         # because we have an RWI involved, we have to do this
         # SafeYield, so that the window does actually appear before we
@@ -689,7 +682,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         """Method that calls Render() on the embedded RenderWindow.
         Use this after having made changes to the scene.
         """
-        self._view_frame.render()
+        self.frame.render()
         self.renderer_3d.Render()
         self.slice_viewer_top.render()
         self.slice_viewer_side.render()
@@ -736,35 +729,35 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         FIXME: Still get a nasty X error :(
         """        
         #THE FRAME (reference)
-        frame = self._view_frame
+        frame = self.frame
 
         # with this complicated de-init, we make sure that VTK is 
         # properly taken care of
-        self.ren.RemoveAllViewProps()
-        self.ren2.RemoveAllViewProps()
-        self.ren3.RemoveAllViewProps()
-        self.ren4.RemoveAllViewProps()
+        self.renderer_top.RemoveAllViewProps()
+        self.renderer_side.RemoveAllViewProps()
+        self.renderer_front.RemoveAllViewProps()
+        self.renderer_3d.RemoveAllViewProps()
 
         # this finalize makes sure we don't get any strange X
         # errors when we kill the module.
-        self.slice_viewer1.close()
-        self.slice_viewer2.close()
-        self.slice_viewer3.close()
-        frame.view3d.GetRenderWindow().Finalize()
-        frame.view3d.SetRenderWindow(None)
-        frame.front.GetRenderWindow().Finalize()
-        frame.front.SetRenderWindow(None)
+        self.slice_viewer_top.close()
+        self.slice_viewer_side.close()
+        self.slice_viewer_front.close()
         frame.top.GetRenderWindow().Finalize()
         frame.top.SetRenderWindow(None)
         frame.side.GetRenderWindow().Finalize()
         frame.side.SetRenderWindow(None)
-        del frame.view3d
-        del frame.front
+        frame.front.GetRenderWindow().Finalize()
+        frame.front.SetRenderWindow(None)
+        frame.view3d.GetRenderWindow().Finalize()
+        frame.view3d.SetRenderWindow(None)
         del frame.top
         del frame.side
-        del self.slice_viewer3
-        del self.slice_viewer2
-        del self.slice_viewer1
+        del frame.front
+        del frame.view3d
+        del self.slice_viewer_top
+        del self.slice_viewer_side
+        del self.slice_viewer_front
         # done with VTK de-init
 
         # now take care of the wx window
