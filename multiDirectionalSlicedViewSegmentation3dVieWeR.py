@@ -348,8 +348,6 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
 
         self.set_input(0, reader.GetOutput())
 
-        self.render()
-
     def _on_clicked_btn_new_color(self, event):
         """Handler for selecting a new color
         """        
@@ -391,6 +389,10 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                 for i, ipw in enumerate(self.slice_viewer_top.ipws):
                         # ipw.SetPlaneOrientation(orientations[i]) # axial
                         ipw.SetSliceIndex(0)
+                self.slice_viewer_top.ipws[0].SetPlaneOrientation(2)
+                # cam_top = self.slice_viewer_top.renderer.GetActiveCamera()
+                # cam_top.SetViewUp(0,-1,0)            
+                # cam_top.SetPosition(127, 127, 1000)
             elif viewer_id == 2: # Side Viewer
                 self.frame.side_zoomer.SetMax(size[0]-1)
                 self.frame.side_zoomer.SetValue(0)
@@ -398,6 +400,10 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                 for i, ipw in enumerate(self.slice_viewer_side.ipws):
                         # ipw.SetPlaneOrientation(orientations[i]) # axial
                         ipw.SetSliceIndex(0)
+                self.slice_viewer_side.ipws[0].SetPlaneOrientation(0)
+                # cam_side = self.slice_viewer_side.renderer.GetActiveCamera()
+                # cam_side.SetViewUp(-1,-1,0)            
+                # cam_side.SetPosition(1000, 127, 127)
             elif viewer_id == 3: # Front Viewer
                 self.frame.front_zoomer.SetMax(size[1]-1)
                 self.frame.front_zoomer.SetValue(0)
@@ -405,6 +411,10 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                 for i, ipw in enumerate(self.slice_viewer_front.ipws):
                         # ipw.SetPlaneOrientation(orientations[i]) # axial
                         ipw.SetSliceIndex(0)
+                self.slice_viewer_front.ipws[0].SetPlaneOrientation(1)
+                # cam_front = self.slice_viewer_front.renderer.GetActiveCamera()
+                # cam_front.SetViewUp(0,0,-1)            
+                # cam_front.SetPosition(127, 1000, 127)
 
             self._update_indicators()
 
@@ -429,47 +439,9 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             """After a new primary has been added, a number of other
             actions have to be performed.
             """
-            # add outline actor and cube axes actor to renderer
+            # add outline actor to renderer
             self.renderer_3d.AddActor(self.frame.view3d._outline_actor)
             self.frame.view3d._outline_actor.PickableOff()
-            #self.ren.AddActor(self._cube_axes_actor2d)
-            #self._cube_axes_actor2d.PickableOff()
-            # FIXME: make this toggle-able
-            #self._cube_axes_actor2d.VisibilityOn()
-
-            # reset the VOI widget
-            #self._voi_widget.SetInteractor(self.threedFrame.threedRWI)
-            #self._voi_widget.SetInput(input_stream)
-
-            # we only want to placewidget if this is the first time
-            #if self._voi_widget.NeedsPlacement:
-            #    self._voi_widget.PlaceWidget()
-            #    self._voi_widget.NeedsPlacement = False
-
-            #self._voi_widget.SetPriority(0.6)
-            #self._handlerWidgetEnabledCheckBox()
-
-
-            # also fix up orientation actor thingy...
-            # ala = input_stream.GetFieldData().GetArray('axis_labels_array')
-            # if ala:
-            #     lut = list('LRPAFH')
-            #     labels = []
-            #     for i in range(6):
-            #         labels.append(lut[ala.GetValue(i)])
-                    
-            #     #self._set_annotated_cube_actor_labels(labels)
-            #     self._orientation_widget.Off()
-            #     self._orientation_widget.SetOrientationMarker(
-            #         self._annotated_cube_actor)
-            #     self._orientation_widget.On()
-                
-            # else:
-            #     self._orientation_widget.Off()
-            #     self._orientation_widget.SetOrientationMarker(
-            #         self._axes_actor)
-            #     self._orientation_widget.On()
-
             # end of method add_primary_init()
 
         def _handleNewImageDataInput():
@@ -490,12 +462,6 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                           "port numbers " \
                           "than existing primary data and overlays."
 
-            # tell all our sliceDirections about the new data
-            # this might throw an exception if the input image data
-            # is invalid, but that's ok, since we haven't done any
-            # accounting here yet.
-            # self.sliceDirections.addData(inputStream)
-
             # find out whether this is  primary or an overlay, record it
             if 'vtkImageDataPrimary' in connecteds:
                 # there's no way there can be only overlays in the list,
@@ -509,8 +475,6 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             # also store binding to the data itself
             self._inputs[idx]['inputData'] = input_stream
 
-
-
             if self._inputs[idx]['Connected'] == 'vtkImageDataPrimary':
                 # things to setup when primary data is added
                 add_primary_init(input_stream)
@@ -518,55 +482,26 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                 # reset everything, including ortho camera
                 #self._resetAll()
             
-            #2d dinges
-            self.slice_viewer_top.set_input(input_stream)
-            self.slice_viewer_top.reset_camera()
-            self.slice_viewer_side.set_input(input_stream)
-            self.slice_viewer_side.reset_camera()
-            self.slice_viewer_front.set_input(input_stream)
-            self.slice_viewer_front.reset_camera()
-            self.slice_viewer_top.ipws[0].SetPlaneOrientation(2)
-            self.slice_viewer_side.ipws[0].SetPlaneOrientation(0)
-            self.slice_viewer_front.ipws[0].SetPlaneOrientation(1)
+            #set the input on the 2d slice viewers
+            self._update_2d_renderers(input_stream)
+            #update our 3d renderer
+            self._update_3d_renderer(input_stream)
 
             self._reset_all_viewers()
             self._reset_zoomers()
-
-            cam1 = self.slice_viewer_top.renderer.GetActiveCamera()
-            cam1.SetViewUp(0,-1,0)            
-            cam1.SetPosition(127, 127, 1000)
-            cam2 = self.slice_viewer_side.renderer.GetActiveCamera()
-            cam2.SetViewUp(-1,-1,0)            
-            cam2.SetPosition(1000, 127, 127)
-            cam3 = self.slice_viewer_front.renderer.GetActiveCamera()
-            cam3.SetViewUp(0,0,-1)            
-            cam3.SetPosition(127, 1000, 127)
-
-            # update our 3d renderer
-            #TODO do this in seperate function
-            self._contourFilter = vtk.vtkContourFilter()
-            self._config.iso_value = 128
-            self._contourFilter.SetInput(input_stream)
-            self._contourFilter.Update()
-            self.contour_mapper.SetInput(self._contourFilter.GetOutput())
-            self.contour_mapper.Update()
-            self.renderer_3d.ResetCamera()
-
-            self.render()
-
-            # end of function _handleImageData()
+            # end of function _handleImageDataInput()
 
         if not(input_stream == None):
             if input_stream.IsA('vtkImageData'):
                 if self._inputs[idx]['Connected'] is None:
                     _handleNewImageDataInput()
-                    self._reset_zoomers()
                 else:
                     # take necessary actions to refresh
                     prevData = self._inputs[idx]['inputData']
-                    self.slice_viewer_top.set_input(input_stream)
-                    self.slice_viewer_side.set_input(input_stream)
-                    self.slice_viewer_front.set_input(input_stream)
+                    #set the input on the 2d slice viewers
+                    self._update_2d_renderers(input_stream)
+                    #update our 3d renderer
+                    self._update_3d_renderer(input_stream)
                     # record it in our main structure
                     self._inputs[idx]['inputData'] = input_stream
                     self._reset_all_viewers()
@@ -575,6 +510,27 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                 print "ERROR: input_stream isn't vtkImageData!"
         else:
             print "ERROR: no input_stream!"
+    # end of set_input
+
+    def _update_2d_renderers(self, input_stream):
+        """Convenience method to pass the input stream to the 2d slice viewers
+        """
+        self.slice_viewer_top.set_input(input_stream)
+        self.slice_viewer_side.set_input(input_stream)
+        self.slice_viewer_front.set_input(input_stream)
+
+    def _update_3d_renderer(self, input_stream):
+        """Calculate the contour based on the input data
+        """
+        self._contourFilter = vtk.vtkContourFilter()
+        self._config.iso_value = 128
+        self._contourFilter.SetInput(input_stream)
+        self._contourFilter.Update()
+        self.contour_mapper.SetInput(self._contourFilter.GetOutput())
+        self.contour_mapper.Update()
+        self.renderer_3d.ResetCamera()
+
+        return self._contourFilter.GetOutput()
 
     def _calculate_selection(self):
         return  #todo
