@@ -126,7 +126,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
 
             self.contour_actor.SetMapper(self.contour_mapper)
             self.contour_actor.GetProperty().SetColor(contour_color)
-            self.contour_actor.GetProperty().SetOpacity(float(frame.transparency_slider.GetValue()) / 100)
+            self.contour_actor.GetProperty().SetOpacity(1 - (float(frame.transparency_slider.GetValue()) / 100))
 
             self.contour_selected_actor.SetMapper(self.contour_selected_mapper)
             self.contour_selected_actor.GetProperty().SetColor(frame.selection_color) 
@@ -190,7 +190,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         vf.upper_slider.Bind(wx.EVT_SCROLL_CHANGED, self._on_slide_tolerance_high)
 
         # bind onChangeSliderTransparency
-
+        vf.transparency_slider.Bind(wx.EVT_SCROLL_CHANGED, self._on_slide_transparency)
 
         # bind onChangeSelectionColor
 
@@ -298,11 +298,8 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
 
     def _on_slide_transparency(self, event):
         """Handler for slider adjustment (Transparency of unselected Actors)
-        """        
-        if self.selectedData == None:
-            return
-        else:  
-            return #TODO    
+        """  
+        self.contour_actor.GetProperty().SetOpacity(1 - (float(self.frame.transparency_slider.GetValue()) / 100))    
 
     def _on_check_continuous(self, event):
         """Handler for checkbox adjustment (Continous selection)
@@ -365,7 +362,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
     def _reset_controls(self, event = None):
         """Handler for resetting the controls
         """
-        return #TODO
+        self.frame._reset_controls()
 
     def _reset_all_viewers(self, event = None):
         """Handler for resetting all viewer
