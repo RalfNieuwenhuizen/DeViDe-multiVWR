@@ -162,62 +162,70 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
     def _bind_events(self):
         """Bind wx events to Python callable object event handlers.
         """
-        vf = self.frame
+        frame = self.frame
         
         # bind onClickedAViewer
-        #vf.slice_viewer_top.Bind(wx.EVT_BUTTON, lambda evt: self._on_clicked_viewer(evt, 1))  
-        #vf.slice_viewer_side.Bind(wx.EVT_BUTTON, lambda evt: self._on_clicked_viewer(evt, 2))  
-        #vf.slice_viewer_front.Bind(wx.EVT_BUTTON, lambda evt: self._on_clicked_viewer(evt, 3))  
-        vf.view3d.Bind(wx.EVT_BUTTON, lambda evt: self._on_clicked_viewer(evt, 4))  
+        #frame.top.Unbind(wx.EVT_LEFT_DOWN)
+        frame.top.Bind(wx.EVT_LEFT_DOWN, lambda evt: self._on_clicked_viewer(evt, 1))  
+        frame.side.Bind(wx.EVT_BUTTON, lambda evt: self._on_clicked_viewer(evt, 2))  
+        frame.front.Bind(wx.EVT_BUTTON, lambda evt: self._on_clicked_viewer(evt, 3))  
+        frame.view3d.Bind(wx.EVT_BUTTON, lambda evt: self._on_clicked_viewer(evt, 4))  
 
         # bind onScrollViewer
-        #vf.slice_viewer_top.Unbind(wx.EVT_MOUSEWHEEL)
-        #vf.slice_viewer_side.Unbind(wx.EVT_MOUSEWHEEL)
-        #vf.slice_viewer_front.Unbind(wx.EVT_MOUSEWHEEL)
-        vf.view3d.Unbind(wx.EVT_MOUSEWHEEL)
-        vf.view3d.Bind(wx.EVT_MOUSEWHEEL, lambda evt: self._on_scroll_viewer(evt, 4))  
+        #frame.slice_viewer_top.Unbind(wx.EVT_MOUSEWHEEL)
+        #frame.slice_viewer_side.Unbind(wx.EVT_MOUSEWHEEL)
+        #frame.slice_viewer_front.Unbind(wx.EVT_MOUSEWHEEL)
+        frame.view3d.Unbind(wx.EVT_MOUSEWHEEL)
+        frame.view3d.Bind(wx.EVT_MOUSEWHEEL, lambda evt: self._on_scroll_viewer(evt, 4))  
 
         # bind onChangeSliderSlice
-        vf.top_zoomer.Bind(wx.EVT_SLIDER, lambda evt: self._on_slide_slice(evt, 1))
-        vf.side_zoomer.Bind(wx.EVT_SLIDER, lambda evt: self._on_slide_slice(evt, 2))
-        vf.front_zoomer.Bind(wx.EVT_SLIDER, lambda evt: self._on_slide_slice(evt, 3))
+        frame.top_zoomer.Bind(wx.EVT_SLIDER, lambda evt: self._on_slide_slice(evt, 1))
+        frame.side_zoomer.Bind(wx.EVT_SLIDER, lambda evt: self._on_slide_slice(evt, 2))
+        frame.front_zoomer.Bind(wx.EVT_SLIDER, lambda evt: self._on_slide_slice(evt, 3))
 
         # bind onChangeSliderToleranceLow
-        vf.lower_slider.Bind(wx.EVT_SCROLL_CHANGED, self._on_slide_tolerance_low)
+        frame.lower_slider.Bind(wx.EVT_SCROLL_CHANGED, self._on_slide_tolerance_low)
 
         # bind onChangeSliderToleranceHigh
-        vf.upper_slider.Bind(wx.EVT_SCROLL_CHANGED, self._on_slide_tolerance_high)
+        frame.upper_slider.Bind(wx.EVT_SCROLL_CHANGED, self._on_slide_tolerance_high)
 
         # bind onChangeSliderTransparency
-        vf.transparency_slider.Bind(wx.EVT_SCROLL_CHANGED, self._on_slide_transparency)
+        frame.transparency_slider.Bind(wx.EVT_SCROLL_CHANGED, self._on_slide_transparency)
 
         # bind onChangeSelectionColor
 
 
         # bind onCheckContinuous
-        vf.continuous_check.Bind(wx.EVT_CHECKBOX, self._on_check_continuous)
+        frame.continuous_check.Bind(wx.EVT_CHECKBOX, self._on_check_continuous)
 
         # bind onCheckTransparencyDistance
-        vf.transparencybydistance_check.Bind(wx.EVT_CHECKBOX, self._on_check_transparency_distance)
+        frame.transparencybydistance_check.Bind(wx.EVT_CHECKBOX, self._on_check_transparency_distance)
 
         # bind onClickresetViewer
-        vf.reset_top.Bind(wx.EVT_BUTTON, lambda x: self._reset_viewer(1))
-        vf.reset_side.Bind(wx.EVT_BUTTON, lambda x: self._reset_viewer(2))
-        vf.reset_front.Bind(wx.EVT_BUTTON, lambda x: self._reset_viewer(3))
-        vf.reset_view3d.Bind(wx.EVT_BUTTON, lambda x: self._reset_viewer(4))
+        frame.reset_top.Bind(wx.EVT_BUTTON, lambda x: self._reset_viewer(1))
+        frame.reset_side.Bind(wx.EVT_BUTTON, lambda x: self._reset_viewer(2))
+        frame.reset_front.Bind(wx.EVT_BUTTON, lambda x: self._reset_viewer(3))
+        frame.reset_view3d.Bind(wx.EVT_BUTTON, lambda x: self._reset_viewer(4))
 
         # bind onClickFileButton
-        vf.filename_label.Bind(wx.EVT_BUTTON, self._on_clicked_btn_new_file)    
+        frame.filename_label.Bind(wx.EVT_BUTTON, self._on_clicked_btn_new_file)    
 
     def _on_clicked_viewer(self, event, viewer_id):
+        # TODO
+        print "clicked Viewer!"
         if viewer_id == 1: # Top Viewer
-            return # TODO
+            print event
         elif viewer_id == 2: # Side Viewer
-            return # TODO
+            print event
         elif viewer_id == 3: # Front Viewer
-            return # TODO
+            print event
         elif  viewer_id == 4: # 3D Viewer
-            return # TODO
+            print event
+
+        if event.ControlDown():
+            print "CONTROL WAS DOWN!!!"
+        
+        pass
 
     def _on_scroll_viewer(self, event, viewer_id):
         if viewer_id == 1: # Top Viewer
