@@ -261,16 +261,20 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         #self.ipws[0].InvokeEvent('InteractionEvent')
 
     def _on_slide_slice(self, event, viewer_id):
-        value = event.GetEventObject().GetValue()
         sv = None
+        slicer_max = 0
         if viewer_id == 1: # Top Viewer
             sv = self.slice_viewer_top
+            slicer_max = self.top_zoomer_max
         elif viewer_id == 2: # Side Viewer
             sv = self.slice_viewer_side
+            slicer_max = self.side_zoomer_max
         elif viewer_id == 3: # Front Viewer
             sv = self.slice_viewer_front
+            slicer_max = self.front_zoomer_max
 
         if not(sv == None):
+            value = slicer_max - event.GetEventObject().GetValue()
             sv.ipws[0].SetSliceIndex(value)
         self.render()
 
@@ -359,6 +363,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         """Handler for resetting the controls
         """
         self.frame._reset_controls()
+        #TODO re_calculate contours with new settings
 
     def _reset_all_viewers(self, event = None):
         """Handler for resetting all viewer
@@ -376,8 +381,9 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         else:
             size = self._inputs[0]['inputData'].GetDimensions()
             if viewer_id == 1: # Top Viewer
-                self.frame.top_zoomer.SetMax(size[2]-1)
-                self.frame.top_zoomer.SetValue(0)
+                self.top_zoomer_max = size[2]-1
+                self.frame.top_zoomer.SetMax(self.top_zoomer_max)
+                self.frame.top_zoomer.SetValue(self.top_zoomer_max)
                 self.slice_viewer_top.reset_to_default_view(2)
                 for i, ipw in enumerate(self.slice_viewer_top.ipws):
                         ipw.SetSliceIndex(0)
@@ -386,8 +392,9 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                 cam_top.SetViewUp(0,1,0)            
                 #cam_top.SetPosition(127, 127, 1000)
             elif viewer_id == 2: # Side Viewer
-                self.frame.side_zoomer.SetMax(size[0]-1)
-                self.frame.side_zoomer.SetValue(0)
+                self.side_zoomer_max = size[0]-1
+                self.frame.side_zoomer.SetMax(self.side_zoomer_max)
+                self.frame.side_zoomer.SetValue(self.side_zoomer_max)
                 self.slice_viewer_side.reset_to_default_view(2)
                 for i, ipw in enumerate(self.slice_viewer_side.ipws):
                         ipw.SetSliceIndex(0)
@@ -396,8 +403,9 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                 #cam_side.SetViewUp(-1,1,0)            
                 #cam_side.SetPosition(1000, 127, 127)
             elif viewer_id == 3: # Front Viewer
-                self.frame.front_zoomer.SetMax(size[1]-1)
-                self.frame.front_zoomer.SetValue(0)
+                self.front_zoomer_max = size[1]-1
+                self.frame.front_zoomer.SetMax(self.front_zoomer_max)
+                self.frame.front_zoomer.SetValue(self.front_zoomer_max)
                 self.slice_viewer_front.reset_to_default_view(2)
                 for i, ipw in enumerate(self.slice_viewer_front.ipws):
                         ipw.SetSliceIndex(0)
