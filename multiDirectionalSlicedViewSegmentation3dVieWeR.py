@@ -18,7 +18,6 @@ from module_kits.misc_kit import misc_utils
 from module_base import ModuleBase
 from module_mixins import IntrospectModuleMixin
 from comedi_utils import CMSliceViewer
-from comedi_utils import SyncSliceViewers
 import module_utils
 import os
 import sys
@@ -381,29 +380,26 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                 self.frame.top_zoomer.SetValue(0)
                 self.slice_viewer_top.reset_to_default_view(2)
                 for i, ipw in enumerate(self.slice_viewer_top.ipws):
-                        # ipw.SetPlaneOrientation(orientations[i]) # axial
                         ipw.SetSliceIndex(0)
                 self.slice_viewer_top.ipws[0].SetPlaneOrientation(2)
-                # cam_top = self.slice_viewer_top.renderer.GetActiveCamera()
-                # cam_top.SetViewUp(0,-1,0)            
-                # cam_top.SetPosition(127, 127, 1000)
+                cam_top = self.slice_viewer_top.renderer.GetActiveCamera()
+                cam_top.SetViewUp(0,1,0)            
+                #cam_top.SetPosition(127, 127, 1000)
             elif viewer_id == 2: # Side Viewer
                 self.frame.side_zoomer.SetMax(size[0]-1)
                 self.frame.side_zoomer.SetValue(0)
                 self.slice_viewer_side.reset_to_default_view(2)
                 for i, ipw in enumerate(self.slice_viewer_side.ipws):
-                        # ipw.SetPlaneOrientation(orientations[i]) # axial
                         ipw.SetSliceIndex(0)
                 self.slice_viewer_side.ipws[0].SetPlaneOrientation(0)
-                # cam_side = self.slice_viewer_side.renderer.GetActiveCamera()
-                # cam_side.SetViewUp(-1,-1,0)            
-                # cam_side.SetPosition(1000, 127, 127)
+                cam_side = self.slice_viewer_side.renderer.GetActiveCamera()
+                #cam_side.SetViewUp(-1,1,0)            
+                #cam_side.SetPosition(1000, 127, 127)
             elif viewer_id == 3: # Front Viewer
                 self.frame.front_zoomer.SetMax(size[1]-1)
                 self.frame.front_zoomer.SetValue(0)
                 self.slice_viewer_front.reset_to_default_view(2)
                 for i, ipw in enumerate(self.slice_viewer_front.ipws):
-                        # ipw.SetPlaneOrientation(orientations[i]) # axial
                         ipw.SetSliceIndex(0)
                 self.slice_viewer_front.ipws[0].SetPlaneOrientation(1)
                 # cam_front = self.slice_viewer_front.renderer.GetActiveCamera()
