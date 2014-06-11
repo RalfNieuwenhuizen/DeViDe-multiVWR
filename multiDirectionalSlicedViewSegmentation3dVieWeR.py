@@ -164,13 +164,22 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         """Bind wx events to Python callable object event handlers.
         """
         frame = self.frame
-        
+
+        #CONTROL check
+        frame.top.Bind(wx.EVT_LEFT_UP, self.onLeftUp)
+
         # bind onClickedAViewer
-        #frame.top.Unbind(wx.EVT_LEFT_DOWN)
-        frame.top.Bind(wx.EVT_LEFT_DOWN, lambda evt: self._on_clicked_viewer(evt, 1))  
-        frame.side.Bind(wx.EVT_BUTTON, lambda evt: self._on_clicked_viewer(evt, 2))  
-        frame.front.Bind(wx.EVT_BUTTON, lambda evt: self._on_clicked_viewer(evt, 3))  
-        frame.view3d.Bind(wx.EVT_BUTTON, lambda evt: self._on_clicked_viewer(evt, 4))  
+        self.slice_viewer_top.ipws[0].AddObserver('StartInteractionEvent', lambda e, o: self._ipwStartInteractionCallback(1))
+        self.slice_viewer_top.ipws[0].AddObserver('InteractionEvent', lambda e, o: self._ipwInteractionCallback(1))
+        self.slice_viewer_top.ipws[0].AddObserver('EndInteractionEvent', lambda e, o: self._ipwEndInteractionCallback(1, e))
+
+        self.slice_viewer_side.ipws[0].AddObserver('StartInteractionEvent', lambda e, o: self._ipwStartInteractionCallback(2))
+        self.slice_viewer_side.ipws[0].AddObserver('InteractionEvent', lambda e, o: self._ipwInteractionCallback(2))
+        self.slice_viewer_side.ipws[0].AddObserver('EndInteractionEvent', lambda e, o: self._ipwEndInteractionCallback(2, e))
+
+        self.slice_viewer_front.ipws[0].AddObserver('StartInteractionEvent', lambda e, o: self._ipwStartInteractionCallback(3))
+        self.slice_viewer_front.ipws[0].AddObserver('InteractionEvent', lambda e, o: self._ipwInteractionCallback(3))
+        self.slice_viewer_front.ipws[0].AddObserver('EndInteractionEvent', lambda e, o: self._ipwEndInteractionCallback(3, e))
 
         # bind onScrollViewer
         #frame.slice_viewer_top.Unbind(wx.EVT_MOUSEWHEEL)
@@ -211,22 +220,30 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         # bind onClickFileButton
         frame.filename_label.Bind(wx.EVT_BUTTON, self._on_clicked_btn_new_file)    
 
-    def _on_clicked_viewer(self, event, viewer_id):
-        # TODO
-        print "clicked Viewer!"
-        if viewer_id == 1: # Top Viewer
-            print event
-        elif viewer_id == 2: # Side Viewer
-            print event
-        elif viewer_id == 3: # Front Viewer
-            print event
-        elif  viewer_id == 4: # 3D Viewer
-            print event
+    def _ipwStartInteractionCallback(self, viewer_id):
+        print "_ipwStartInteractionCallback " + str(viewer_id)
+        self._ipwInteractionCallback(viewer_id)
 
-        if event.ControlDown():
-            print "CONTROL WAS DOWN!!!"
-        
-        pass
+    def _ipwInteractionCallback(self, viewer_id):
+        cd = 4 * [0.0]
+        if viewer_id == 1 and self.slice_viewer_top.ipws[0].GetCursorData(cd):
+            self._setCurrentCursor(cd)
+        elif viewer_id == 2 and self.slice_viewer_side.ipws[0].GetCursorData(cd):
+            self._setCurrentCursor(cd)
+        elif viewer_id == 3 and self.slice_viewer_front.ipws[0].GetCursorData(cd):
+            self._setCurrentCursor(cd)
+
+    def onLeftUp(self, evt):
+        print "leftUP!!" + str(evt.ControlDown())
+        self.controlIsCurrentlyDown = evt.ControlDown()
+        evt.Skip()
+
+    def _ipwEndInteractionCallback(self, viewer_id, event):
+        print "_ipwEndInteractionCallback "
+
+    def _setCurrentCursor(self, cursorData):
+        print "Setting cursorData!"
+        print cursorData
 
     def _on_scroll_viewer(self, event, viewer_id):
         if viewer_id == 1: # Top Viewer
