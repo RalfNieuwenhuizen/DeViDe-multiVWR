@@ -1,5 +1,5 @@
 # multiDirectionalSlicedViewSegmentation3dVieWeR by Ralf Nieuwenhuizen & Jan-Willem van Velzen
-# Description //TODO
+# Description see below
 #
 # Based on SkeletonAUIViewer:
 # Copyright (c) Charl P. Botha, TU Delft.
@@ -26,21 +26,20 @@ import vtk
 import wx
 
 class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, ModuleBase):
-    """Module to visualize lungemphysema in a CT scan. A lung mask is also needed. 
+    """Module to visualize VTI images, easily combining axial, coronal and sagittal data in one screen,
+     and giving the possibility to select seedpoints that will grow into contours on the 3D screen. 
 
-    EmphysemaViewer consists of a volume rendering and two linked slice-based views; one with the original data and one with an emphysema overlay. The volume rendering shows 3 
-    contours: the lungedges and 2 different contours of emphysema; a normal one and a severe one. 
+    The multiDirectionalSlicedViewSegmentation3dVieWeR consists of three sliceviewers, and a 3D viewer. 
 
-    There are two ways of setting the emphysema values. 
-    - The first way is choosing the 'default' values, which are literature-based. They are set on -950 HU (emphysema) and -970 HU (severe). 
-    - The other way is a computational way: The lowest 11% values, that are present in the data are marked as emphysema, the lowest 8,5% values are marked as severe emphysema.
-    The theory behind this is the hypothesis that the histograms of emphysema patients differ from healthy people in a way that in emphysema patients there are relatively more  
-    lower values present. In both ways you can finetune the values, or completely change them (if you want to). 
+    There are two ways of setting the input. 
+    - The first way is using a vtiRDR, to load the data via the network. 
+    - The other way is just using the file browser to collect a VTI file from your file system. 
 
-    After loading your image data and mask data, you can inspect the data and examine the severity of the emphysema of the patient. 
+    After loading your image data , you can inspect the data and examine the patient, by highlighting one or multiple areas by your choice. 
 
     Controls:
-    LMB: The left mouse button can be used to rotate objects in the 3D scene, or to poll Houndsfield Units in areas of interest (click and hold to see the values)\n
+    LMB: The left mouse button can be used to select a seedpoint from the different 2D views\n
+    CTRL + LMB: Holding the CTRL-key does the same, but adds a seedpoint to your selection, LMB then returns your selection to a single point\n
     RMB: For the slice viewers, you can set the window and level values by clicking and holding the right mouse button in a slice and moving your mouse. You can see the current
     window and level values in the bottom of the viewer. Outside of the slice, this zooms the camera in and out\n
     MMB: The middle mouse button enables stepping through the slices if clicked and held in the center of the slice. When clicking on de edges of a slice, this re-orients the 

@@ -1,5 +1,6 @@
 # multiDirectionalSlicedViewSegmentation3dVieWeRFrame by Ralf Nieuwenhuizen & Jan-Willem van Velzen
-# Description //TODO
+# Description 
+#   Class that defines the frame used by the multiDirectionalSlicedViewSegmentation3dVieWeR.
 #
 # Based on SkeletonAUIViewerFrame:
 # Copyright (c) Charl P. Botha, TU Delft.
@@ -22,28 +23,28 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
     """
 
     def __init__(self, parent, id=-1, title="", name=""):
-        """Populates the menu and adds all required panels
+        """Populates the screen and adds the controls
         """
         wx.Frame.__init__(self, parent, id=id, title=title, 
                 pos=wx.DefaultPosition, size=(1000,875), name=name)
 
         self.SetBackgroundColour("#888888")
 
-        views_control_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        views_sizer_left = wx.BoxSizer(wx.VERTICAL)
-        views_sizer_right = wx.BoxSizer(wx.VERTICAL)
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        views_sizer_left = wx.BoxSizer(wx.VERTICAL) #The leftmost viewers
+        views_sizer_right = wx.BoxSizer(wx.VERTICAL) #The rightmost viewers
 
         views_sizer_left.Add(self._create_top_pane(), 1, wx.LEFT|wx.TOP|wx.BOTTOM|wx.EXPAND, 7)
         views_sizer_left.Add(self._create_front_pane(), 1, wx.LEFT|wx.BOTTOM|wx.EXPAND, 7)
         views_sizer_right.Add(self._create_side_pane(), 1, wx.LEFT|wx.RIGHT|wx.TOP|wx.BOTTOM|wx.EXPAND, 7)
         views_sizer_right.Add(self._create_3D_pane(), 1, wx.LEFT|wx.RIGHT|wx.BOTTOM|wx.EXPAND, 7)
 
-        views_control_sizer.Add(views_sizer_left, 1, wx.EXPAND)
-        views_control_sizer.Add(views_sizer_right, 1, wx.EXPAND)
+        sizer.Add(views_sizer_left, 1, wx.EXPAND)
+        sizer.Add(views_sizer_right, 1, wx.EXPAND)
 
-        views_control_sizer.Add(self._create_controls_pane(), 0, wx.EXPAND)
+        sizer.Add(self._create_controls_pane(), 0, wx.EXPAND)
 
-        self.SetSizer(views_control_sizer)
+        self.SetSizer(sizer)
         self.Layout()
                 
         # self.CreateStatusBar()
@@ -293,7 +294,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         return panel
 
     def _create_orientation_widget(self, view3d):
-        """setup orientation widget stuff
+        """setup orientation widget stuff, the axes in the bottom
         """
         view3d._orientation_widget = vtk.vtkOrientationMarkerWidget()
         
@@ -317,6 +318,8 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         view3d._orientation_widget.InteractiveOff()
 
     def _reset_controls(self, event = None):
+        """Method to set the standard values on the controls.
+        """
         self.color_picker.SetColour('#00FF00')
         self.lower_slider.SetValue(-20)
         self.upper_slider.SetValue(20)
@@ -327,21 +330,31 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         self._update_transparency_label()
 
     def _get_filename(self):
+        """Return the filename currently displayed on the file button, or None.
+        """
         if self.file_button.GetLabel() == 'NO INPUT': 
             return None 
         else: 
             return self.file_button.GetLabel()
 
-    def _set_filename(self, filename = 'NO INPUT'):
+    def _set_filename(self, filename = 'NO INPUT'):        
+        """Set the filename on the file button, or reset.
+        """
         self.file_button.SetLabel(filename)
 
     def _update_lower_label(self, event = None):
+        """Method to keep the slider labels up-to-date
+        """
         self.lower_value_label.SetLabel(str(self.lower_slider.GetValue()))
 
     def _update_upper_label(self, event = None):
+        """Method to keep the slider labels up-to-date
+        """
         self.upper_value_label.SetLabel(str(self.upper_slider.GetValue()))
 
     def _update_transparency_label(self, event = None):
+        """Method to keep the slider labels up-to-date
+        """
         self.transparency_value_label.SetLabel(str(self.transparency_slider.GetValue()) + '%')
 
     def render(self):
