@@ -153,6 +153,8 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             self.sync_module_logic_with_config()
             # then bring it all the way up again to the view
             self.sync_module_view_with_logic()
+
+            self.seedPoints = []
             
         # END OF _INIT_FRAME
 
@@ -221,29 +223,31 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         frame.filename_label.Bind(wx.EVT_BUTTON, self._on_clicked_btn_new_file)    
 
     def _ipwStartInteractionCallback(self, viewer_id):
-        print "_ipwStartInteractionCallback " + str(viewer_id)
+        # print "_ipwStartInteractionCallback " + str(viewer_id)
+        self.tempCursorData = None
         self._ipwInteractionCallback(viewer_id)
 
     def _ipwInteractionCallback(self, viewer_id):
         cd = 4 * [0.0]
         if viewer_id == 1 and self.slice_viewer_top.ipws[0].GetCursorData(cd):
-            self._setCurrentCursor(cd)
+            self.tempCursorData = cd
         elif viewer_id == 2 and self.slice_viewer_side.ipws[0].GetCursorData(cd):
-            self._setCurrentCursor(cd)
+            self.tempCursorData = cd
         elif viewer_id == 3 and self.slice_viewer_front.ipws[0].GetCursorData(cd):
-            self._setCurrentCursor(cd)
+            self.tempCursorData = cd
 
     def onLeftUp(self, evt):
-        print "leftUP!!" + str(evt.ControlDown())
+        # print "leftUP!!" + str(evt.ControlDown())
         self.controlIsCurrentlyDown = evt.ControlDown()
         evt.Skip()
 
     def _ipwEndInteractionCallback(self, viewer_id, event):
         print "_ipwEndInteractionCallback "
+        if not (self.controlIsCurrentlyDown):
+            self.seedPoints = []
+        self.seedPoints.append(self.tempCursorData)
 
-    def _setCurrentCursor(self, cursorData):
-        print "Setting cursorData!"
-        print cursorData
+        self._calculate_selection
 
     def _on_scroll_viewer(self, event, viewer_id):
         if viewer_id == 1: # Top Viewer
