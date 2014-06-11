@@ -143,7 +143,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
 
         transparency_box = wx.BoxSizer(wx.HORIZONTAL)
         self.transparency_slider = wx.Slider(panel, -1, 50, 0, 100, (0, 0), (200, 50),wx.SL_HORIZONTAL)
-        transparency_label = wx.StaticText(panel, -1, "Transparency" , wx.Point(0, 0))
+        transparency_label = wx.StaticText(panel, -1, "Opacity" , wx.Point(0, 0))
         self.transparency_value_label = wx.StaticText(panel, -1, str(self.transparency_slider.GetValue()) + '%')
         self.transparency_value_label.SetFont(wx.Font(8, wx.DEFAULT, wx.NORMAL, wx.BOLD))
         self.transparency_slider.Bind(wx.EVT_SLIDER, self._update_transparency_label)
