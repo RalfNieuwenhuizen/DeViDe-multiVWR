@@ -344,8 +344,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         filename = os.path.split(file_path)[1]
         fileBaseName = os.path.splitext(filename)[0]
 
-        self.frame.filename = filename
-        self.frame.filename_label.SetLabel(filename)
+        self.frame._set_filename(filename)
 
         reader = vtk.vtkXMLImageDataReader()
         reader.SetFileName(file_path)
@@ -484,6 +483,8 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             if self._inputs[idx]['Connected'] == 'vtkImageDataPrimary':
                 # things to setup when primary data is added
                 add_primary_init(input_stream)
+                if self.frame._get_filename() == None:
+                    self.frame._set_filename('FROM NETWORK')
 
                 # reset everything, including ortho camera
                 #self._resetAll()
@@ -510,12 +511,15 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                     self._update_3d_renderer(input_stream)
                     # record it in our main structure
                     self._inputs[idx]['inputData'] = input_stream
+                    if self.frame._get_filename() == None:
+                        self.frame._set_filename('FROM NETWORK')
                     self._reset_all_viewers()
                     self._reset_zoomers()
             else:
                 print "ERROR: input_stream isn't vtkImageData!"
         else:
-            print "ERROR: no input_stream!"
+            self.frame._set_filename()
+            print "No input_stream"
     # end of set_input
 
     def _update_2d_renderers(self, input_stream):
@@ -528,15 +532,15 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
     def _update_3d_renderer(self, input_stream):
         """Calculate the contour based on the input data
         """
-        self._contourFilter = vtk.vtkContourFilter()
         self._config.iso_value = 128
-        self._contourFilter.SetInput(input_stream)
-        self._contourFilter.Update()
-        self.contour_mapper.SetInput(self._contourFilter.GetOutput())
+        contourFilter = vtk.vtkContourFilter()
+        contourFilter.SetInput(input_stream)
+        contourFilter.Update()
+        self.contour_mapper.SetInput(contourFilter.GetOutput())
         self.contour_mapper.Update()
         self.renderer_3d.ResetCamera()
 
-        return self._contourFilter.GetOutput()
+        return contourFilter.GetOutput()
 
     def _calculate_selection(self):
         return  #todo

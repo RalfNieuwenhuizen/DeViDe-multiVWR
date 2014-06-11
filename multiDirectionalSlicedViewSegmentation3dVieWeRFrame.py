@@ -68,12 +68,10 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
 
         #FILE
         file_box = wx.BoxSizer(wx.VERTICAL)
-
-        self.filename = "NO INPUT"
         
         file_label = wx.StaticText(panel, -1, "VTI File" , wx.Point(0, 0))
         file_label.SetFont(font_title)
-        self.filename_label = wx.Button(panel, -1, self.filename , wx.Point(0, 0))
+        self.filename_label = wx.Button(panel, -1, 'NO INPUT' , wx.Point(0, 0), wx.Size(150, 20))
         file_box.Add(file_label)
         file_box.Add(self.filename_label)
 
@@ -319,8 +317,6 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         view3d._orientation_widget.InteractiveOff()
 
     def _reset_controls(self, event = None):
-        #TODO Only do this if inputData is actualy cleared:
-        #self.filename_label.SetLabel('NO INPUT')
         self.color_picker.SetColour('#00FF00')
         self.lower_slider.SetValue(-20)
         self.upper_slider.SetValue(20)
@@ -330,6 +326,15 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         self._update_lower_label()
         self._update_upper_label()
         self._update_transparency_label()
+
+    def _get_filename(self):
+        if self.filename_label.GetLabel() == 'NO INPUT': 
+            return None 
+        else: 
+            return self.filename_label.GetLabel()
+
+    def _set_filename(self, filename = 'NO INPUT'):
+        self.filename_label.SetLabel(filename)
 
     def _update_lower_label(self, event = None):
         self.lower_value_label.SetLabel(str(self.lower_slider.GetValue()))
