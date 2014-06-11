@@ -218,7 +218,10 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         frame.reset_view3d.Bind(wx.EVT_BUTTON, lambda x: self._reset_viewer(4))
 
         # bind onClickFileButton
-        frame.filename_label.Bind(wx.EVT_BUTTON, self._on_clicked_btn_new_file)    
+        frame.filename_label.Bind(wx.EVT_BUTTON, self._on_clicked_btn_new_file) 
+
+        # bind onClickSaveSnapshotButton
+        frame.save_button.Bind(wx.EVT_BUTTON, self._save_snapshot)    
 
     def _ipwStartInteractionCallback(self, viewer_id):
         print "_ipwStartInteractionCallback " + str(viewer_id)
@@ -372,6 +375,25 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         reader.Update()
 
         self.set_input(0, reader.GetOutput())
+
+    def _save_snapshot(self, event):
+        """Handler for filesaving
+        """
+        filters = 'png file (*.png)|*.png'
+        dlg = wx.FileDialog(self.frame, "Choose a destination", self._config.last_used_dir, "", filters, wx.SAVE)
+        if dlg.ShowModal() == wx.ID_OK:
+            filename=dlg.GetFilename()
+            self._config.last_used_dir=dlg.GetDirectory()
+            file_path = "%s/%s" % (self._config.last_used_dir, filename)
+            w2i  = vtk.vtkWindowToImageFilter()
+            w2i.SetInput(self.frame.view3d.GetRenderWindow()); 
+            w2i.Update()
+            writer = vtk.vtkPNGWriter()
+            writer.SetInput(w2i.GetOutput())
+            writer.SetFileName(file_path)
+            writer.Update()
+            result = writer.Write()
+        dlg.Destroy()
 
     def _reset_frame(self, event = None):
         """Handler for resetting the frame

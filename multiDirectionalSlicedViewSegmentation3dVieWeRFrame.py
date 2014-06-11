@@ -279,14 +279,19 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
 
         self.view3d = wxVTKRenderWindowInteractor(panel, -1, (400,400))
 
+        self.save_button = wx.Button(panel, -1, "Save Snapshot")
         self.reset_view3d = wx.Button(panel, -1, "Reset Camera")
 
-        tl_sizer = wx.BoxSizer(wx.VERTICAL)
-        tl_sizer.Add(self.view3d, 1, wx.EXPAND)
-        tl_sizer.Add(self.reset_view3d, 0, wx.EXPAND)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(self.view3d, 1, wx.EXPAND)
 
-        panel.SetSizer(tl_sizer)
-        tl_sizer.Fit(panel)
+        sizer_bottom = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_bottom.Add(self.save_button, 1)
+        sizer_bottom.Add(self.reset_view3d, 1, wx.ALIGN_RIGHT)
+        sizer.Add(sizer_bottom, 0, wx.EXPAND)
+
+        panel.SetSizer(sizer)
+        sizer.Fit(panel)
 
         self._create_orientation_widget(self.view3d)
 
