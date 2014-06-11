@@ -81,7 +81,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             frame.SetTitle('multiDirectionalSlicedViewSegmentation3dVieWeR')
 
             # predefine this
-            self.selectedData = None
+            self.selectedData = []
 
             # anything you stuff into self._config will be saved
             self._config.last_used_dir = ''
@@ -116,24 +116,19 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
 
             # setup the 3D Renderer (id: 4)
             self.contour_actor = vtk.vtkActor()
-            self.contour_selected_actor = vtk.vtkActor()
-
             self.contour_mapper = vtk.vtkPolyDataMapper()
             self.contour_mapper.ScalarVisibilityOff()
-            self.contour_selected_mapper = vtk.vtkPolyDataMapper()
-            self.contour_selected_mapper.ScalarVisibilityOff()
+
+            self.contour_selected_actors = []
 
             self.contour_actor.SetMapper(self.contour_mapper)
             self.contour_actor.GetProperty().SetColor(contour_color)
             self._on_slide_transparency()
 
-            self.contour_selected_actor.SetMapper(self.contour_selected_mapper)
-            self._on_select_new_color()
-
             self.renderer_3d = vtk.vtkRenderer()
             self.renderer_3d.SetBackground(threeD_bg_color)
             self.renderer_3d.AddActor(self.contour_actor)
-            self.renderer_3d.AddActor(self.contour_selected_actor)
+
             frame.view3d.GetRenderWindow().AddRenderer(self.renderer_3d)
             frame.view3d._outline_source = vtk.vtkOutlineSource()
             om = vtk.vtkPolyDataMapper()
@@ -210,9 +205,6 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         # bind onCheckContinuous
         frame.continuous_check.Bind(wx.EVT_CHECKBOX, self._on_check_continuous)
 
-        # bind onCheckTransparencyDistance
-        frame.transparencybydistance_check.Bind(wx.EVT_CHECKBOX, self._on_check_transparency_distance)
-
         # bind onClickresetViewer
         frame.reset_top.Bind(wx.EVT_BUTTON, lambda x: self._reset_viewer(1))
         frame.reset_side.Bind(wx.EVT_BUTTON, lambda x: self._reset_viewer(2))
@@ -250,7 +242,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             self.seedPoints = []
         self.seedPoints.append(self.tempCursorData)
 
-        self._calculate_selection
+        self._calculate_selection()
 
     def _on_scroll_viewer(self, event, viewer_id):
         if viewer_id == 1: # Top Viewer
@@ -314,7 +306,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
     def _on_slide_tolerance_low(self, event):
         """Handler for slider adjustment (Lower Threshold)
         """
-        if self.selectedData == None:
+        if self.selectedData == []:
             return
         else:
             self._calculate_selection()
@@ -322,7 +314,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
     def _on_slide_tolerance_high(self, event):
         """Handler for slider adjustment (Upper Threshold)
         """        
-        if self.selectedData == None:
+        if self.selectedData == []:
             return
         else:  
             self._calculate_selection()   
@@ -330,7 +322,8 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
     def _on_select_new_color(self, event = None):
         """Handler for color adjustment (Color of selection)
         """
-        self.contour_selected_actor.GetProperty().SetColor(self.frame.color_picker.GetColour().Get())
+        for actor in self.contour_selected_actors:
+            actor.GetProperty().SetColor(self.frame.color_picker.GetColour().Get())
 
     def _on_slide_transparency(self, event = None):
         """Handler for slider adjustment (Transparency of unselected Actors)
@@ -340,7 +333,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
     def _on_check_continuous(self, event):
         """Handler for checkbox adjustment (Continous selection)
         """        
-        if self.selectedData == None:
+        if self.selectedData == []:
             return
         else:  
             self._calculate_selection()    
@@ -348,7 +341,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
     def _on_check_transparency_distance(self, event):
         """Handler for checkbox adjustment (Unselected transparency by distance)
         """        
-        if self.selectedData == None:
+        if self.selectedData == []:
             return
         else:  
             return #TODO    
@@ -567,9 +560,10 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
     def _update_2d_renderers(self, input_stream):
         """Convenience method to pass the input stream to the 2d slice viewers
         """
-        self.slice_viewer_top.set_input(input_stream)
-        self.slice_viewer_side.set_input(input_stream)
-        self.slice_viewer_front.set_input(input_stream)
+        if not input_stream == None:
+            self.slice_viewer_top.set_input(input_stream)
+            self.slice_viewer_side.set_input(input_stream)
+            self.slice_viewer_front.set_input(input_stream)
 
     def _update_3d_renderer(self, input_stream):
         """Calculate the contour based on the input data
@@ -585,21 +579,47 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
 
         return contourFilter.GetOutput()
 
-    def _calculate_selection(self, iso_value = 0):
-        #TODO make dynamic
-        iso_value = -110
+    def _calculate_selection(self):
+        """Calculate the selection contour based on the input data and seedpoints
+        """
+        for actor in self.contour_selected_actors:
+            self.renderer_3d.RemoveActor(actor)
 
-        #TODO handle continuous (marching cubes?)
+        # initial cleanup
+        self.selectedData = []
+        self.contour_selected_actors = []
 
-        contourFilter = vtk.vtkContourFilter()
-        contourFilter.SetInput(self._inputs[0]['inputData'])
-        contourFilter.GenerateValues(contourFilter.GetNumberOfContours(), iso_value - self.frame.lower_slider.GetValue(), iso_value + self.frame.upper_slider.GetValue())
-        contourFilter.Update()
+        if self.frame.continuous_check.GetValue():
+            #TODO handle continuous (marching cubes?)
+            print "TODO: Calculate in a continour way"
+        else:
+            for seedPoint in self.seedPoints:
+                iso_value = seedPoint[3]
 
-        self.selectedData = contourFilter.GetOutput()
-        
-        self.contour_selected_mapper.SetInput(self.selectedData)
-        self.contour_selected_mapper.Update()
+                # Setup Actor and Mapper
+                actor = vtk.vtkActor()
+                mapper = vtk.vtkPolyDataMapper()
+                mapper.ScalarVisibilityOff()
+                actor.SetMapper(mapper)
+                self.renderer_3d.AddActor(actor)
+
+                # Calculate Polydata
+                contourFilter = vtk.vtkContourFilter()
+                contourFilter.SetInput(self._inputs[0]['inputData'])
+                contourFilter.GenerateValues(contourFilter.GetNumberOfContours(), iso_value - self.frame.lower_slider.GetValue(), iso_value + self.frame.upper_slider.GetValue())
+                contourFilter.Update()
+
+                # Set output to mapper
+                data = contourFilter.GetOutput()
+                mapper.SetInput(data)
+                mapper.Update()
+
+                # Save result
+                self.selectedData.append(data)
+                self.contour_selected_actors.append(actor)
+
+            # Set colors
+            self._on_select_new_color()
 
         return self.selectedData
 

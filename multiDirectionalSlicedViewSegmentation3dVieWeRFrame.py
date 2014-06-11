@@ -156,15 +156,15 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         unselected_box.Add(transparency_box)
         unselected_box.Add(self.transparency_slider)
 
-        tbd_box = wx.BoxSizer(wx.HORIZONTAL)
-        transparencybydistance_label = wx.StaticText(panel, -1, "Transparency by distance" , wx.Point(0, 0))
-        self.transparencybydistance_check = wx.CheckBox(panel, -1, "" , wx.Point(0, 0))
-        tbd_box.Add((5,0), 0)
-        tbd_box.Add(transparencybydistance_label)
-        tbd_box.Add((20,0), 0)
-        tbd_box.Add(self.transparencybydistance_check)
+        #tbd_box = wx.BoxSizer(wx.HORIZONTAL)
+        #transparencybydistance_label = wx.StaticText(panel, -1, "Transparency by distance" , wx.Point(0, 0))
+        #self.transparencybydistance_check = wx.CheckBox(panel, -1, "" , wx.Point(0, 0))
+        #tbd_box.Add((5,0), 0)
+        #tbd_box.Add(transparencybydistance_label)
+        #tbd_box.Add((20,0), 0)
+        #tbd_box.Add(self.transparencybydistance_check)
 
-        unselected_box.Add(tbd_box)
+        #unselected_box.Add(tbd_box)
 
         #RESET        
         reset_box = wx.BoxSizer(wx.VERTICAL)
@@ -327,7 +327,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         self.upper_slider.SetValue(20)
         self.continuous_check.SetValue(1)
         self.transparency_slider.SetValue(20)
-        self.transparencybydistance_check.SetValue(0)
+        #self.transparencybydistance_check.SetValue(0)
         self._update_lower_label()
         self._update_upper_label()
         self._update_transparency_label()
