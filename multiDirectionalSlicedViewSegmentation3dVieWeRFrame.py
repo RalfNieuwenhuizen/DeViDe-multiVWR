@@ -50,8 +50,6 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         # self.SetStatusText("multiDirectionalSlicedViewSegmentation3dVieWeR loaded")
 
 
-
-
     def close(self):
         """Selfdestruct :)
         """
@@ -71,16 +69,19 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         
         file_label = wx.StaticText(panel, -1, "VTI File" , wx.Point(0, 0))
         file_label.SetFont(font_title)
-        self.filename_label = wx.Button(panel, -1, 'NO INPUT' , wx.Point(0, 0), wx.Size(150, 20))
+        self.file_button = wx.Button(panel, -1, 'NO INPUT' , wx.Point(0, 0), wx.Size(150, 30))
+        file_box.Add((0,10), 0)
         file_box.Add(file_label)
-        file_box.Add(self.filename_label)
+        file_box.Add((0,10), 0)
+        file_box.Add(self.file_button)
 
         #SELECTION
         selection_box = wx.BoxSizer(wx.VERTICAL)
         
-        selection_label = wx.StaticText(panel, -1, "Selection:" , wx.Point(0, 0))
+        selection_label = wx.StaticText(panel, -1, "Selection" , wx.Point(0, 0))
         selection_label.SetFont(font_title)
         selection_box.Add(selection_label)
+        selection_box.Add((0,3), 0)
 
         color_box = wx.BoxSizer(wx.HORIZONTAL)
         self.color_label = wx.StaticText(panel, -1, "Color" , wx.Point(0, 0))
@@ -137,9 +138,10 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         #UNSELECTED
         unselected_box = wx.BoxSizer(wx.VERTICAL)
         
-        unselected_label = wx.StaticText(panel, -1, "Unselected:" , wx.Point(0, 0))
+        unselected_label = wx.StaticText(panel, -1, "Unselected" , wx.Point(0, 0))
         unselected_label.SetFont(font_title)
         unselected_box.Add(unselected_label)
+        unselected_box.Add((0,10), 0)
 
         transparency_box = wx.BoxSizer(wx.HORIZONTAL)
         self.transparency_slider = wx.Slider(panel, -1, 50, 0, 100, (0, 0), (200, 50),wx.SL_HORIZONTAL)
@@ -150,32 +152,25 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
 
         transparency_box.Add((5,0), 0)
         transparency_box.Add(transparency_label)
-        transparency_box.Add((75,0), 0)
+        transparency_box.Add((110,0), 0)
         transparency_box.Add(self.transparency_value_label)
 
         unselected_box.Add(transparency_box)
         unselected_box.Add(self.transparency_slider)
 
-        #tbd_box = wx.BoxSizer(wx.HORIZONTAL)
-        #transparencybydistance_label = wx.StaticText(panel, -1, "Transparency by distance" , wx.Point(0, 0))
-        #self.transparencybydistance_check = wx.CheckBox(panel, -1, "" , wx.Point(0, 0))
-        #tbd_box.Add((5,0), 0)
-        #tbd_box.Add(transparencybydistance_label)
-        #tbd_box.Add((20,0), 0)
-        #tbd_box.Add(self.transparencybydistance_check)
-
-        #unselected_box.Add(tbd_box)
-
         #RESET        
         reset_box = wx.BoxSizer(wx.VERTICAL)
         self.reset_controls_button = wx.Button(panel, -1, "Reset Settings" , wx.Point(0, 0))
-        reset_box.Add(self.reset_controls_button, 1, wx.EXPAND)
+        reset_box.Add(self.reset_controls_button, 1, wx.ALIGN_CENTER)
         self.reset_controls_button.Bind(wx.EVT_BUTTON, self._reset_controls)
 
         #Sizing
-        sizer.Add(file_box, 1, wx.BOTTOM | wx.EXPAND, 7)
-        sizer.Add(selection_box, 5, wx.BOTTOM|wx.EXPAND, 7)
-        sizer.Add(unselected_box, 5, wx.BOTTOM|wx.EXPAND, 7)
+        sizer.Add(file_box, 0, wx.BOTTOM | wx.EXPAND | wx.LEFT, 5)
+        sizer.Add((0,30), 0)
+        sizer.Add(selection_box, 0, wx.BOTTOM|wx.EXPAND | wx.LEFT, 5)
+        sizer.Add((0,40), 0)
+        sizer.Add(unselected_box, 0, wx.BOTTOM|wx.EXPAND | wx.LEFT, 5)
+        sizer.Add((0,30), 0)
         sizer.Add(reset_box, 0, wx.EXPAND)
 
         panel.SetSizer(sizer)
@@ -327,19 +322,18 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         self.upper_slider.SetValue(20)
         self.continuous_check.SetValue(1)
         self.transparency_slider.SetValue(20)
-        #self.transparencybydistance_check.SetValue(0)
         self._update_lower_label()
         self._update_upper_label()
         self._update_transparency_label()
 
     def _get_filename(self):
-        if self.filename_label.GetLabel() == 'NO INPUT': 
+        if self.file_button.GetLabel() == 'NO INPUT': 
             return None 
         else: 
-            return self.filename_label.GetLabel()
+            return self.file_button.GetLabel()
 
     def _set_filename(self, filename = 'NO INPUT'):
-        self.filename_label.SetLabel(filename)
+        self.file_button.SetLabel(filename)
 
     def _update_lower_label(self, event = None):
         self.lower_value_label.SetLabel(str(self.lower_slider.GetValue()))

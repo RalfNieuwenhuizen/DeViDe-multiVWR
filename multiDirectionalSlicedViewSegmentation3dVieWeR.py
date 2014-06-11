@@ -212,7 +212,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         frame.reset_view3d.Bind(wx.EVT_BUTTON, lambda x: self._reset_viewer(4))
 
         # bind onClickFileButton
-        frame.filename_label.Bind(wx.EVT_BUTTON, self._on_clicked_btn_new_file) 
+        frame.file_button.Bind(wx.EVT_BUTTON, self._on_clicked_btn_new_file) 
 
         # bind onClickSaveSnapshotButton
         frame.save_button.Bind(wx.EVT_BUTTON, self._save_snapshot)    
