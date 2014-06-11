@@ -305,7 +305,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
     def _on_slide_tolerance_low(self, event):
         """Handler for slider adjustment (Lower Threshold)
         """
-        if self.selectedData == []:
+        if len(self.seedPoints) == 0:
             return
         else:
             self._calculate_selection()
@@ -313,7 +313,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
     def _on_slide_tolerance_high(self, event):
         """Handler for slider adjustment (Upper Threshold)
         """        
-        if self.selectedData == []:
+        if len(self.seedPoints) == 0:
             return
         else:  
             self._calculate_selection()   
@@ -332,7 +332,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
     def _on_check_continuous(self, event):
         """Handler for checkbox adjustment (Continous selection)
         """        
-        if self.selectedData == []:
+        if len(self.seedPoints) == 0:
             return
         else:  
             self._calculate_selection()    
@@ -340,7 +340,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
     def _on_check_transparency_distance(self, event):
         """Handler for checkbox adjustment (Unselected transparency by distance)
         """        
-        if self.selectedData == []:
+        if len(self.seedPoints) == 0:
             return
         else:  
             return #TODO    
@@ -401,8 +401,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         """Handler for resetting the controls
         """
         self.frame._reset_controls()
-        #Update the contours
-        self._reset_viewer(4)
+        self._calculate_selection()
 
     def _reset_all_viewers(self, event = None):
         """Handler for resetting all viewer
@@ -559,10 +558,13 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
     def _update_2d_renderers(self, input_stream):
         """Convenience method to pass the input stream to the 2d slice viewers
         """
-        if not input_stream == None:
+        try:
             self.slice_viewer_top.set_input(input_stream)
             self.slice_viewer_side.set_input(input_stream)
             self.slice_viewer_front.set_input(input_stream)
+        except:
+            print "ISSUE: adding input_streams"
+            
 
     def _update_3d_renderer(self, input_stream):
         """Calculate the contour based on the input data
@@ -571,17 +573,21 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         contourFilter = vtk.vtkContourFilter()
         contourFilter.SetInput(input_stream)
         contourFilter.Update()
-        self.contour_mapper.SetInput(contourFilter.GetOutput())
+        data = contourFilter.GetOutput()
+        self.contour_mapper.SetInput(data)
         self.contour_mapper.Update()
         self._calculate_selection()
         self.renderer_3d.ResetCamera()
 
-        return contourFilter.GetOutput()
+        return data
 
     def _calculate_selection(self):
         """Calculate the selection contour based on the input data and seedpoints
         """
         for actor in self.contour_selected_actors:
+            #self.renderer_top.RemoveActor(actor)
+            #self.renderer_side.RemoveActor(actor)
+            #self.renderer_front.RemoveActor(actor)
             self.renderer_3d.RemoveActor(actor)
 
         # initial cleanup
@@ -589,8 +595,75 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         self.contour_selected_actors = []
 
         if self.frame.continuous_check.GetValue():
-            #TODO handle continuous (marching cubes?)
-            print "TODO: Calculate in a continour way"
+            for seed_point in self.seedPoints:
+
+                #self._config._thresh_interval = 5
+                _image_threshold = vtk.vtkImageThreshold()
+                # seedconnect wants unsigned char at input
+                _image_threshold.SetOutputScalarTypeToUnsignedChar()
+                _image_threshold.SetInValue(1)
+                _image_threshold.SetOutValue(0)
+                
+                _seed_connect = vtk.vtkImageSeedConnectivity()
+                _seed_connect.SetInputConnectValue(1)
+                _seed_connect.SetOutputConnectedValue(1)
+                _seed_connect.SetOutputUnconnectedValue(0)
+
+                _seed_connect.SetInput(_image_threshold.GetOutput())
+
+
+
+
+                _image_threshold.SetInput(self._inputs[0]['inputData'])
+
+
+                # extract a list from the input points
+                _seed_connect.RemoveAllSeeds()
+                # we need to call Modified() explicitly as RemoveAllSeeds()
+                # doesn't.  AddSeed() does, but sometimes the list is empty at
+                # this stage and AddSeed() isn't called.
+                _seed_connect.Modified()
+                
+                for seedPoint in self.seedPoints:
+                    _seed_connect.AddSeed(seedPoint[0], seedPoint[1],
+                                               seedPoint[2])
+
+                _image_threshold.GetInput().Update()
+
+                iso_value = seed_point[3]
+
+                lower_thresh = iso_value + self.frame.lower_slider.GetValue()
+                upper_thresh = iso_value + self.frame.upper_slider.GetValue()
+
+                print "Auto thresh: ", lower_thresh, " - ", upper_thresh
+
+                _image_threshold.ThresholdBetween(lower_thresh, upper_thresh)
+                _seed_connect.Update()
+
+
+                output = _seed_connect.GetOutput()
+
+                contourFilter = vtk.vtkContourFilter()
+                contourFilter.SetInput(output)
+                #contourFilter.GenerateValues(contourFilter.GetNumberOfContours(), 0, 1)
+                contourFilter.Update()
+
+                # Setup Actor and Mapper
+                actor = vtk.vtkActor()
+                mapper = vtk.vtkPolyDataMapper()
+                mapper.ScalarVisibilityOff()
+                actor.SetMapper(mapper)
+                self.renderer_3d.AddActor(actor)
+
+                # Set output to mapper
+                data = contourFilter.GetOutput()
+                mapper.SetInput(data)
+                mapper.Update()
+
+                # Save result
+                self.selectedData.append(data)
+                self.contour_selected_actors.append(actor)
+
         else:
             for seedPoint in self.seedPoints:
                 iso_value = seedPoint[3]
@@ -600,12 +673,15 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                 mapper = vtk.vtkPolyDataMapper()
                 mapper.ScalarVisibilityOff()
                 actor.SetMapper(mapper)
+                #self.renderer_top.AddActor(actor)
+                #self.renderer_side.AddActor(actor)
+                #self.renderer_front.AddActor(actor)
                 self.renderer_3d.AddActor(actor)
 
                 # Calculate Polydata
                 contourFilter = vtk.vtkContourFilter()
                 contourFilter.SetInput(self._inputs[0]['inputData'])
-                contourFilter.GenerateValues(contourFilter.GetNumberOfContours(), iso_value - self.frame.lower_slider.GetValue(), iso_value + self.frame.upper_slider.GetValue())
+                contourFilter.GenerateValues(contourFilter.GetNumberOfContours(), iso_value + self.frame.lower_slider.GetValue(), iso_value + self.frame.upper_slider.GetValue())
                 contourFilter.Update()
 
                 # Set output to mapper
@@ -617,10 +693,74 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                 self.selectedData.append(data)
                 self.contour_selected_actors.append(actor)
 
-            # Set colors
-            self._on_select_new_color()
+        # Set colors
+        self._on_select_new_color()
 
         return self.selectedData
+
+    def addContourObject(self, contourObject, prop3D):
+        """Activate contouring for the contourObject.  The contourObject
+        is usually a tdObject and specifically a vtkPolyData.  We also
+        need the prop3D that represents this polydata in the 3d scene.
+        """
+
+
+        #TODO include this to show selection in 2d renders
+        if self._contourObjectsDict.has_key(contourObject):
+            # we already have this, thanks
+            return
+
+        try:
+            contourable = contourObject.IsA('vtkPolyData')
+        except:
+            contourable = False
+
+        if contourable:
+            # we need a cutter to calculate the contours and then a stripper
+            # to string them all together
+            cutter = vtk.vtkCutter()
+            plane = vtk.vtkPlane()
+            cutter.SetCutFunction(plane)
+            trfm = vtk.vtkTransform()
+            trfm.SetMatrix(prop3D.GetMatrix())
+            trfmFilter = vtk.vtkTransformPolyDataFilter()
+            trfmFilter.SetTransform(trfm)
+            trfmFilter.SetInput(contourObject)
+            cutter.SetInput(trfmFilter.GetOutput())
+            stripper = vtk.vtkStripper()
+            stripper.SetInput(cutter.GetOutput())
+            
+            #
+            #tubef = vtk.vtkTubeFilter()
+            #tubef.SetNumberOfSides(12)
+            #tubef.SetRadius(0.5)
+            #tubef.SetInput(stripper.GetOutput())
+
+            # and create the overlay at least for the 3d renderer
+            mapper = vtk.vtkPolyDataMapper()
+            mapper.SetInput(stripper.GetOutput())
+            mapper.ScalarVisibilityOff()
+            actor = vtk.vtkActor()
+            actor.SetMapper(mapper)
+            c = self.sliceDirections.slice3dVWR._tdObjects.getObjectColour(
+                contourObject)
+            actor.GetProperty().SetColor(c)
+            actor.GetProperty().SetInterpolationToFlat()
+
+            # add it to the renderer
+            self.sliceDirections.slice3dVWR._threedRenderer.AddActor(actor)
+            
+            # add all necessary metadata to our dict
+            contourDict = {'contourObject' : contourObject,
+                           'contourObjectProp' : prop3D,
+                           'trfmFilter' : trfmFilter,
+                           'cutter' : cutter,
+                           'tdActor' : actor}
+                           
+            self._contourObjectsDict[contourObject] = contourDict
+
+            # now sync the bugger
+            self.syncContourToObject(contourObject)
 
     # def create_contour(self, contourValueModerate, contourValueSevere):
     #     """
