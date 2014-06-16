@@ -321,13 +321,28 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         """Method to set the standard values on the controls.
         """
         self.color_picker.SetColour('#00FF00')
-        self.lower_slider.SetValue(-20)
-        self.upper_slider.SetValue(20)
         self.continuous_check.SetValue(1)
         self.transparency_slider.SetValue(20)
+        self._update_transparency_label()
+        self._reset_thresholds(True)
+
+    def _reset_thresholds(self, continuous = True):
+        """Method to set the standard values on the threshold sliders.
+        """
+        if continuous:
+            self.lower_slider.SetMin(-500)
+            self.lower_slider.SetValue(-100)
+            self.upper_slider.SetMax(500)
+            self.upper_slider.SetValue(100)
+        else:
+            self.lower_slider.SetMin(-100)
+            self.lower_slider.SetValue(-20)
+            self.upper_slider.SetMax(100)
+            self.upper_slider.SetValue(20)
+
         self._update_lower_label()
         self._update_upper_label()
-        self._update_transparency_label()
+
 
     def _get_filename(self):
         """Return the filename currently displayed on the file button, or None.
