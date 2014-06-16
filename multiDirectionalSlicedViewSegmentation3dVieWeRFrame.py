@@ -132,7 +132,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         self.continuous_check = wx.CheckBox(panel, -1, "" , wx.Point(0, 0))
         continuous_box.Add((5,0), 0)
         continuous_box.Add(continuous_label, 1)
-        continuous_box.Add((105,0), 0)
+        continuous_box.Add((85,0), 0)
         continuous_box.Add(self.continuous_check, 0, wx.ALIGN_RIGHT)
         selection_box.Add(continuous_box)
 
@@ -321,7 +321,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         """Method to set the standard values on the controls.
         """
         self.color_picker.SetColour('#00FF00')
-        self.continuous_check.SetValue(1)
+        self.continuous_check.SetValue(0)
         self.transparency_slider.SetValue(20)
         self._update_transparency_label()
         self._reset_thresholds()
@@ -329,17 +329,17 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
     def _reset_thresholds(self):
         """Method to set the standard values on the threshold sliders.
         """
-        continuous = continuous_check.GetValue()
+        continuous = self.continuous_check.GetValue()
         if continuous:
             self.lower_slider.SetMin(-500)
-            self.lower_slider.SetValue(-100)
+            self.lower_slider.SetValue(-250)
             self.upper_slider.SetMax(500)
-            self.upper_slider.SetValue(100)
+            self.upper_slider.SetValue(250)
         else:
             self.lower_slider.SetMin(-500)
-            self.lower_slider.SetValue(-100)
+            self.lower_slider.SetValue(-250)
             self.upper_slider.SetMax(500)
-            self.upper_slider.SetValue(100)
+            self.upper_slider.SetValue(250)
 
         self._update_lower_label()
         self._update_upper_label()

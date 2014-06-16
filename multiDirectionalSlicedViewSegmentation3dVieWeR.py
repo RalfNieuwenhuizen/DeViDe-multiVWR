@@ -412,6 +412,54 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
     def _reset_viewer(self, viewer_id, event = None):
         """Handler for resetting a specific viewer
         """
+        def resetCamera(viewerIndex):
+            sliceViewer = None
+            renderer = None
+            if(viewerIndex == 1):
+                sliceViewer = self.slice_viewer_top
+                renderer = self.renderer_top
+            elif(viewerIndex == 2):
+                sliceViewer = self.slice_viewer_side
+                renderer = self.renderer_side
+            elif(viewerIndex ==3):
+                sliceViewer = self.slice_viewer_front
+                renderer = self.renderer_front
+            elif(viewerIndex ==4):
+                sliceViewer = self.frame.view3d;
+                renderer = self.renderer_3d
+
+            cam = renderer.GetActiveCamera()
+
+            # then make sure it's up is the right way
+            if(viewerIndex == 1):
+                cam.SetViewUp(0,1,0)
+                cam.SetPosition(0, 0, 1)
+            elif(viewerIndex == 2):
+                cam.SetViewUp(0,1,0)
+                cam.SetPosition(1, 0, 0)
+            elif(viewerIndex ==3):
+                cam.SetViewUp(0,1,0)
+                cam.SetPosition(0, -1, 0)
+            if(viewerIndex == 4):
+                cam.SetViewUp(0, 1, 0)
+                fp = cam.GetFocalPoint()
+                cp = cam.GetPosition()
+                if cp[2] < fp[2]:
+                    z = fp[2] + (fp[2] - cp[2])
+                else:
+                    z = cp[2]
+
+                cam.SetPosition(fp[0], fp[1], z)  
+                print("Setting camera " + str(viewerIndex) + " to (" + str(fp[0]) + ", " + str(fp[1]) + ", " + str(z) + ")") 
+
+            # first reset the camera
+            renderer.ResetCamera()
+            
+            if(viewerIndex == 4): 
+                sliceViewer.Render()
+            else:
+                sliceViewer.render()
+
         if self._inputs[0]['inputData'] == None:
             return
         else:
@@ -420,37 +468,29 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                 self.top_zoomer_max = size[2]-1
                 self.frame.top_zoomer.SetMax(self.top_zoomer_max)
                 self.frame.top_zoomer.SetValue(self.top_zoomer_max)
-                self.slice_viewer_top.reset_to_default_view(2)
                 for i, ipw in enumerate(self.slice_viewer_top.ipws):
                         ipw.SetSliceIndex(0)
                 self.slice_viewer_top.ipws[0].SetPlaneOrientation(2)
-                cam_top = self.slice_viewer_top.renderer.GetActiveCamera()
-                cam_top.SetViewUp(0,1,0)            
-                #cam_top.SetPosition(127, 127, 1000)
+                resetCamera(1)
             elif viewer_id == 2: # Side Viewer
                 self.side_zoomer_max = size[0]-1
                 self.frame.side_zoomer.SetMax(self.side_zoomer_max)
                 self.frame.side_zoomer.SetValue(self.side_zoomer_max)
-                self.slice_viewer_side.reset_to_default_view(2)
                 for i, ipw in enumerate(self.slice_viewer_side.ipws):
                         ipw.SetSliceIndex(0)
                 self.slice_viewer_side.ipws[0].SetPlaneOrientation(0)
-                cam_side = self.slice_viewer_side.renderer.GetActiveCamera()
-                #cam_side.SetViewUp(-1,1,0)            
-                #cam_side.SetPosition(1000, 127, 127)
+                resetCamera(2)
             elif viewer_id == 3: # Front Viewer
                 self.front_zoomer_max = size[1]-1
                 self.frame.front_zoomer.SetMax(self.front_zoomer_max)
                 self.frame.front_zoomer.SetValue(self.front_zoomer_max)
-                self.slice_viewer_front.reset_to_default_view(2)
                 for i, ipw in enumerate(self.slice_viewer_front.ipws):
                         ipw.SetSliceIndex(0)
                 self.slice_viewer_front.ipws[0].SetPlaneOrientation(1)
-                # cam_front = self.slice_viewer_front.renderer.GetActiveCamera()
-                # cam_front.SetViewUp(0,0,-1)            
-                # cam_front.SetPosition(127, 1000, 127)
+                resetCamera(3)
             elif viewer_id == 4: # 3D Viewer
                 self._update_3d_renderer(self._inputs[0]['inputData'])
+                resetCamera(4)
 
             self._update_indicators()
 
