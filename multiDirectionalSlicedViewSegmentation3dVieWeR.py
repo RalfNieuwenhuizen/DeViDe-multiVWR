@@ -432,14 +432,23 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
 
             # then make sure it's up is the right way
             if(viewerIndex == 1):
-                cam.SetViewUp(0,1,0)
-                cam.SetPosition(0, 0, 1)
+                cam.SetViewUp(0, 1 ,0)
+                posX = 0
+                posY = 0
+                posZ = 1
+                cam.SetPosition(posX, posY, posZ) 
             elif(viewerIndex == 2):
-                cam.SetViewUp(0,1,0)
-                cam.SetPosition(1, 0, 0)
+                cam.SetViewUp(0, 1 ,0)
+                posX = 1
+                posY = 0
+                posZ = 0
+                cam.SetPosition(posX, posY, posZ) 
             elif(viewerIndex ==3):
                 cam.SetViewUp(0,1,0)
-                cam.SetPosition(0, -1, 0)
+                posX = 0
+                posY = -1
+                posZ = 0
+                cam.SetPosition(posX, posY, posZ) 
             if(viewerIndex == 4):
                 cam.SetViewUp(0, 1, 0)
                 fp = cam.GetFocalPoint()
@@ -448,9 +457,13 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                     z = fp[2] + (fp[2] - cp[2])
                 else:
                     z = cp[2]
+                posX = fp[0]
+                posY = fp[1]
+                posZ = z
 
-                cam.SetPosition(fp[0], fp[1], z)  
-                print("Setting camera " + str(viewerIndex) + " to (" + str(fp[0]) + ", " + str(fp[1]) + ", " + str(z) + ")") 
+                cam.SetPosition(posX, posY, posZ)  
+                cam.SetViewUp(0, 1, 0)
+            print("Setting camera " + str(viewerIndex) + " to (" + str(posX) + ", " + str(posY) + ", " + str(posZ) + ")") 
 
             # first reset the camera
             renderer.ResetCamera()
