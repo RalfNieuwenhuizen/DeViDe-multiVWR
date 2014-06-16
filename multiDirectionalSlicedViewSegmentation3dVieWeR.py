@@ -330,7 +330,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
     def _on_check_continuous(self, event):
         """Handler for checkbox adjustment (Continous selection)
         """        
-        self.frame._reset_thresholds(self.frame.continuous_check.GetValue())
+        self.frame._reset_thresholds()
         if len(self.seedPoints) == 0:
             return
         else:  
@@ -752,86 +752,6 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
 
             # now sync the bugger
             self.syncContourToObject(contourObject)
-
-    # def create_contour(self, contourValueModerate, contourValueSevere):
-    #     """
-    #     """
-    #     mask = vtk.vtkImageMask()
-    #     severeFraction = 0.10
-    #     moderateFraction = 0.12
-        
-    #     # We only want to contour the lungs, so mask it
-    #     mask.SetMaskInput(self.mask_data)
-    #     mask.SetInput(self._inputs[0]['inputData'])
-    #     mask.Update()
-    #     self.selectedData = mask.GetOutput()
-        
-        
-    #     if contourValueModerate == 0 and contourValueSevere == 0: # This means we get to calculate the percentual values ourselves!
-    #         scalars = self.lungVolume.GetScalarRange()
-    #         range = scalars[1]-scalars[0]
-
-    #         contourValueSevere = scalars[0]+range*severeFraction
-    #         contourValueModerate = scalars[0]+range*moderateFraction
-
-    #         self.frame.upper_slider.SetValue(contourValueModerate)    
-    #         self.frame.lower_slider.SetValue(contourValueSevere)
-    #         self.create_overlay(contourValueModerate,contourValueSevere)
-
-    #     # Create the contours
-    #     self.adjust_contour(self.selectedData, contourValueSevere, self.severe_mapper)
-    #     self.adjust_contour(self.selectedData, contourValueModerate, self.moderate_mapper)
-    #     #self.adjust_contour(self.mask_data, 0.5, self.lung_mapper)
-    #     contourData = vtk.vtkMarchingCubes()
-    #     contourData.SetValue(0,1)
-    #     contourData.SetInput(self.mask_data)
-
-    #     smoother = vtk.vtkWindowedSincPolyDataFilter()
-    #     smoother.SetInput(contourData.GetOutput())
-    #     smoother.BoundarySmoothingOn()
-    #     smoother.SetNumberOfIterations(40)
-    #     smoother.Update()
-    #     self.contour_mapper.SetInput(smoother.GetOutput())
-    #     self.contour_mapper.Update()
-
-    #     # Set the camera to a nice view
-    #     cam = self.ren.GetActiveCamera()
-    #     cam.SetPosition(0,-100,0)
-    #     cam.SetFocalPoint(0,0,0)
-    #     cam.SetViewUp(0,0,1)
-    #     self.ren.ResetCamera()
-    #     self.render()
-        
-
-    #     self._imageThreshold = vtk.vtkImageThreshold()
-    #     self._contourFilter = vtk.vtkContourFilter()
-
-    #     # now setup some defaults before our sync
-    #     self._config.iso_value = 128
-    #     # now setup some defaults before our sync
-    #     self._config.lowerThreshold = 0
-    #     self._config.upperThreshold = 2500
-    #     #self._config.rtu = 1
-    #     self._config.replaceIn = 1
-    #     self._config.inValue = 1
-    #     self._config.replaceOut = 1
-    #     self._config.outValue = 0
-    #     self._config.outputScalarType = self._imageThreshold.GetOutputScalarType()
-
-    #     self.selectedData = self._imageThreshold.GetOutput()
-
-    # def adjust_contour(self, volume, contourValue, mapper):
-    #     """Adjust or create an isocontour using the Marching Cubes surface at the given 
-    #     value using the given mapper
-    #     """
-    # 	self.frame.SetStatusText("Calculating new volumerender...")
-    # 	contour = vtk.vtkMarchingCubes()
-    # 	contour.SetValue(0,contourValue)
-    # 	contour.SetInput(volume)
-    # 	mapper.SetInput(contour.GetOutput())
-    # 	mapper.Update()
-    # 	self.render()
-    # 	self.frame.SetStatusText("Calculated new volumerender")      
 
     ###################################################################################
     #   _____ _______ ____  _____    _____  ______          _____ _____ _   _  _____  #

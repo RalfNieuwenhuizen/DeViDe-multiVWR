@@ -128,7 +128,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
 
 
         continuous_box = wx.BoxSizer(wx.HORIZONTAL)
-        continuous_label = wx.StaticText(panel, -1, "Continuous" , wx.Point(0, 0))
+        continuous_label = wx.StaticText(panel, -1, "Only connected" , wx.Point(0, 0))
         self.continuous_check = wx.CheckBox(panel, -1, "" , wx.Point(0, 0))
         continuous_box.Add((5,0), 0)
         continuous_box.Add(continuous_label, 1)
@@ -324,21 +324,22 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         self.continuous_check.SetValue(1)
         self.transparency_slider.SetValue(20)
         self._update_transparency_label()
-        self._reset_thresholds(True)
+        self._reset_thresholds()
 
-    def _reset_thresholds(self, continuous = True):
+    def _reset_thresholds(self):
         """Method to set the standard values on the threshold sliders.
         """
+        continuous = continuous_check.GetValue()
         if continuous:
             self.lower_slider.SetMin(-500)
             self.lower_slider.SetValue(-100)
             self.upper_slider.SetMax(500)
             self.upper_slider.SetValue(100)
         else:
-            self.lower_slider.SetMin(-100)
-            self.lower_slider.SetValue(-20)
-            self.upper_slider.SetMax(100)
-            self.upper_slider.SetValue(20)
+            self.lower_slider.SetMin(-500)
+            self.lower_slider.SetValue(-100)
+            self.upper_slider.SetMax(500)
+            self.upper_slider.SetValue(100)
 
         self._update_lower_label()
         self._update_upper_label()
