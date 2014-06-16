@@ -330,7 +330,6 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
     def _on_check_continuous(self, event):
         """Handler for checkbox adjustment (Continous selection)
         """        
-        self.frame._reset_thresholds()
         if len(self.seedPoints) == 0:
             return
         else:  
