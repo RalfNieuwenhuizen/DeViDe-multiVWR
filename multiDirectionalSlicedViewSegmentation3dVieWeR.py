@@ -44,9 +44,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
     window and level values in the bottom of the viewer. Outside of the slice, this zooms the camera in and out\n
     MMB: The middle mouse button enables stepping through the slices if clicked and held in the center of the slice. When clicking on de edges of a slice, this re-orients the 
     entire slice. Outside of the slice, this pans the camera\n
-    Scrollwheel: The scrollwheel can be used for zooming in and out of a scene, but also for sliceviewing if used with the CTRL- or SHIFT-key\n
-    SHIFT: By holding the SHIFT-key, it is possible to use the mouse scrollwheel to scroll through the slices.\n
-    CTRL: Holding the CTRL-key does the same, but enables stepping through the data in steps of 10 slices.\n
+    Scrollwheel: The scrollwheel can be used for zooming in and out of a scene\n
     """
 
     NUM_INPUTS = 1
@@ -603,19 +601,13 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                 _image_threshold.SetOutputScalarTypeToUnsignedChar()
                 _image_threshold.SetInValue(1)
                 _image_threshold.SetOutValue(0)
+                _image_threshold.SetInput(self._inputs[0]['inputData'])
                 
                 _seed_connect = vtk.vtkImageSeedConnectivity()
                 _seed_connect.SetInputConnectValue(1)
                 _seed_connect.SetOutputConnectedValue(1)
                 _seed_connect.SetOutputUnconnectedValue(0)
-
                 _seed_connect.SetInput(_image_threshold.GetOutput())
-
-
-
-
-                _image_threshold.SetInput(self._inputs[0]['inputData'])
-
 
                 # extract a list from the input points
                 _seed_connect.RemoveAllSeeds()
@@ -625,44 +617,42 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                 _seed_connect.Modified()
                 
                 for seedPoint in self.seedPoints:
-                    _seed_connect.AddSeed(seedPoint[0], seedPoint[1],
-                                               seedPoint[2])
+                    _seed_connect.AddSeed(seedPoint[0], seedPoint[1], seedPoint[2])
 
-                _image_threshold.GetInput().Update()
+                    #Determine threshold
+                    iso_value = seed_point[3]
+                    lower_thresh = iso_value + self.frame.lower_slider.GetValue()
+                    upper_thresh = iso_value + self.frame.upper_slider.GetValue()
+                    _image_threshold.ThresholdBetween(lower_thresh, upper_thresh)
 
-                iso_value = seed_point[3]
+                    #Update all stuff
+                    _image_threshold.GetInput().Update()
+                    _image_threshold.Update()
+                    _seed_connect.Update()
 
-                lower_thresh = iso_value + self.frame.lower_slider.GetValue()
-                upper_thresh = iso_value + self.frame.upper_slider.GetValue()
+                    #Create the contour
+                    contourFilter = vtk.vtkContourFilter()
+                    contourFilter.SetInput(_seed_connect.GetOutput())
+                    contourFilter.GenerateValues(contourFilter.GetNumberOfContours(), 1, 1) #because 1 is output in-value
+                    contourFilter.Update()
 
-                print "Auto thresh: ", lower_thresh, " - ", upper_thresh
+                    # Setup Actor and Mapper
+                    actor = vtk.vtkActor()
+                    mapper = vtk.vtkPolyDataMapper()
+                    mapper.ScalarVisibilityOff()
+                    actor.SetMapper(mapper)
+                    self.renderer_3d.AddActor(actor)
 
-                _image_threshold.ThresholdBetween(lower_thresh, upper_thresh)
-                _seed_connect.Update()
+                    # Set output to mapper
+                    data = contourFilter.GetOutput()
+                    print data
+                    mapper.SetInput(data)
+                    mapper.Update()
 
-
-                output = _seed_connect.GetOutput()
-
-                contourFilter = vtk.vtkContourFilter()
-                contourFilter.SetInput(output)
-                #contourFilter.GenerateValues(contourFilter.GetNumberOfContours(), 0, 1)
-                contourFilter.Update()
-
-                # Setup Actor and Mapper
-                actor = vtk.vtkActor()
-                mapper = vtk.vtkPolyDataMapper()
-                mapper.ScalarVisibilityOff()
-                actor.SetMapper(mapper)
-                self.renderer_3d.AddActor(actor)
-
-                # Set output to mapper
-                data = contourFilter.GetOutput()
-                mapper.SetInput(data)
-                mapper.Update()
-
-                # Save result
-                self.selectedData.append(data)
-                self.contour_selected_actors.append(actor)
+                    # Save result
+                    self.selectedData.append(data)
+                    self.contour_selected_actors.append(actor)
+                    #End for-loop
 
         else:
             for seedPoint in self.seedPoints:
