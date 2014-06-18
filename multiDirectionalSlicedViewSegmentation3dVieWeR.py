@@ -577,6 +577,10 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                 # reset everything, including ortho camera
                 #self._resetAll()
             
+            self.selectedData = [] 
+            self.contour_selected_actors = []
+            self._contourObjectsDict = {}
+
             #set the input on the 2d slice viewers
             self._update_2d_renderers(input_stream)
             #update our 3d renderer
@@ -640,9 +644,9 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         """Calculate the selection contour based on the input data and seedpoints
         """
         for actor in self.contour_selected_actors:
-            #self.renderer_top.RemoveActor(actor)
-            #self.renderer_side.RemoveActor(actor)
-            #self.renderer_front.RemoveActor(actor)
+            self.renderer_top.RemoveActor(actor)
+            self.renderer_side.RemoveActor(actor)
+            self.renderer_front.RemoveActor(actor)
             self.renderer_3d.RemoveActor(actor)
 
         # initial cleanup
@@ -674,43 +678,45 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                 _seed_connect.Modified()
                 
                 for seedPoint in self.seedPoints:
-                    _seed_connect.AddSeed(seedPoint[0], seedPoint[1], seedPoint[2])
+                    if not seedPoint == None:
+                        _seed_connect.AddSeed(seedPoint[0], seedPoint[1], seedPoint[2])
 
-                    #Determine threshold
-                    iso_value = seed_point[3]
-                    lower_thresh = iso_value + self.frame.lower_slider.GetValue()
-                    upper_thresh = iso_value + self.frame.upper_slider.GetValue()
-                    _image_threshold.ThresholdBetween(lower_thresh, upper_thresh)
+                        #Determine threshold
+                        iso_value = seed_point[3]
+                        lower_thresh = iso_value + self.frame.lower_slider.GetValue()
+                        upper_thresh = iso_value + self.frame.upper_slider.GetValue()
+                        _image_threshold.ThresholdBetween(lower_thresh, upper_thresh)
 
-                    #Update all stuff
-                    _image_threshold.GetInput().Update()
-                    _image_threshold.Update()
-                    _seed_connect.Update()
+                        #Update all stuff
+                        _image_threshold.GetInput().Update()
+                        _image_threshold.Update()
+                        _seed_connect.Update()
 
-                    #Create the contour
-                    contourFilter = vtk.vtkContourFilter()
-                    contourFilter.SetInput(_seed_connect.GetOutput())
-                    contourFilter.GenerateValues(contourFilter.GetNumberOfContours(), 1, 1) #because 1 is output in-value
-                    contourFilter.Update()
+                        #Create the contour
+                        contourFilter = vtk.vtkContourFilter()
+                        contourFilter.SetInput(_seed_connect.GetOutput())
+                        contourFilter.GenerateValues(contourFilter.GetNumberOfContours(), 1, 1) #because 1 is output in-value
+                        contourFilter.Update()
 
-                    # Setup Actor and Mapper
-                    actor = vtk.vtkActor()
-                    mapper = vtk.vtkPolyDataMapper()
-                    mapper.ScalarVisibilityOff()
-                    actor.SetMapper(mapper)
-                    self.renderer_3d.AddActor(actor)
+                        # Setup Actor and Mapper
+                        actor = vtk.vtkActor()
+                        mapper = vtk.vtkPolyDataMapper()
+                        mapper.ScalarVisibilityOff()
+                        actor.SetMapper(mapper)
+                        self.renderer_3d.AddActor(actor)
+                        self.renderer_top.AddActor(actor)
 
-                    # Set output to mapper
-                    data = contourFilter.GetOutput()
-                    mapper.SetInput(data)
-                    mapper.Update()
+                        # Set output to mapper
+                        data = contourFilter.GetOutput()
+                        mapper.SetInput(data)
+                        mapper.Update()
 
-                    # Save result
-                    self.selectedData.append(data)
-                    self.contour_selected_actors.append(actor)
+                        self.addSelectionTo2DViewers(data, actor)
 
-                    self.addSelectionTo2DViewers(data, actor)
-                    #End for-loop
+                        # Save result
+                        self.selectedData.append(data)
+                        self.contour_selected_actors.append(actor)
+                        #End for-loop
 
         else:
             for seedPoint in self.seedPoints:
@@ -722,10 +728,8 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                     mapper = vtk.vtkPolyDataMapper()
                     mapper.ScalarVisibilityOff()
                     actor.SetMapper(mapper)
-                    #self.renderer_top.AddActor(actor)
-                    #self.renderer_side.AddActor(actor)
-                    #self.renderer_front.AddActor(actor)
                     self.renderer_3d.AddActor(actor)
+                    self.renderer_top.AddActor(actor)
 
                     # Calculate Polydata
                     contourFilter = vtk.vtkContourFilter()
@@ -738,11 +742,11 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                     mapper.SetInput(data)
                     mapper.Update()
 
+                    self.addSelectionTo2DViewers(data, actor)
+
                     # Save result
                     self.selectedData.append(data)
                     self.contour_selected_actors.append(actor)
-
-                    self.addSelectionTo2DViewers(data, actor)
 
         # Set colors
         self._on_select_new_color()
@@ -813,7 +817,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             actor.GetProperty().SetInterpolationToFlat()
 
             # add it to the renderer
-            renderer.AddActor(actor)
+            renderer.AddActor(prop3D)
             
             # add all necessary metadata to our dict
             contourDict = {'contourObject' : contourObject,
