@@ -461,7 +461,8 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                 posY = fp[1]
                 posZ = z
 
-                cam.SetPosition(posX, posY, posZ)  
+                cam.SetFocalPoint(0, 99999999, 0)  #Look towards infinity
+                cam.SetPosition(posX, posY, posZ)
                 cam.SetViewUp(0, 1, 0)
             print("Setting camera " + str(viewerIndex) + " to (" + str(posX) + ", " + str(posY) + ", " + str(posZ) + ")") 
 
