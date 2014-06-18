@@ -151,7 +151,10 @@ class CMSliceViewer:
             # if user is NOT doing shift / control, we pass on to the
             # default handling which will give control to the VTK
             # mousewheel handlers.
-            self.rwi.OnMouseWheel(event)
+            try:
+                self.rwi.OnMouseWheel(event)
+            except:
+                someBoolean = 0
             return
             
         if event.GetWheelRotation() > 0:
