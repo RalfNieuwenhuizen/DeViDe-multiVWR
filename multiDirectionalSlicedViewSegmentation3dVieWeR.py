@@ -699,7 +699,6 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
 
                     # Set output to mapper
                     data = contourFilter.GetOutput()
-                    print data
                     mapper.SetInput(data)
                     mapper.Update()
 
@@ -737,22 +736,26 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                 self.selectedData.append(data)
                 self.contour_selected_actors.append(actor)
 
+        #Add contoursto 2dViewers
+        prop3D = None
+        self.addContourObject(prop3D)
+
         # Set colors
         self._on_select_new_color()
 
         return self.selectedData
 
-    def addContourObject(self, contourObject, prop3D):
+    def addContourObject(self, prop3D):
         """Activate contouring for the contourObject.  The contourObject
         is usually a tdObject and specifically a vtkPolyData.  We also
         need the prop3D that represents this polydata in the 3d scene.
         """
-
+        contourObject = self.selectedData
 
         #TODO include this to show selection in 2d renders
-        if self._contourObjectsDict.has_key(contourObject):
-            # we already have this, thanks
-            return
+        #if self._contourObjectsDict.has_key(contourObject):
+        #    # we already have this, thanks
+        #    return
 
         try:
             contourable = contourObject.IsA('vtkPolyData')
@@ -786,13 +789,16 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             mapper.ScalarVisibilityOff()
             actor = vtk.vtkActor()
             actor.SetMapper(mapper)
-            c = self.sliceDirections.slice3dVWR._tdObjects.getObjectColour(
-                contourObject)
-            actor.GetProperty().SetColor(c)
+            #color = self.sliceDirections.slice3dVWR._tdObjects.getObjectColour(
+            #    contourObject)
+
+            actor.GetProperty().SetColor(self.frame.color_picker.GetColour().Get())
             actor.GetProperty().SetInterpolationToFlat()
 
             # add it to the renderer
-            self.sliceDirections.slice3dVWR._threedRenderer.AddActor(actor)
+            self.renderer_top.AddActor(actor)
+            self.renderer_side.AddActor(actor)
+            self.renderer_front.AddActor(actor)
             
             # add all necessary metadata to our dict
             contourDict = {'contourObject' : contourObject,
@@ -805,6 +811,8 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
 
             # now sync the bugger
             self.syncContourToObject(contourObject)
+        else:
+            print "Error: polyData is not Contourable!!!"
 
     ###################################################################################
     #   _____ _______ ____  _____    _____  ______          _____ _____ _   _  _____  #
