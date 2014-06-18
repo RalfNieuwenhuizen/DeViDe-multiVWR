@@ -736,7 +736,6 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                         mapper.ScalarVisibilityOff()
                         actor.SetMapper(mapper)
                         self.renderer_3d.AddActor(actor)
-                        self.renderer_top.AddActor(actor)
 
                         # Set output to mapper
                         data = contourFilter.GetOutput()
@@ -761,7 +760,6 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                     mapper.ScalarVisibilityOff()
                     actor.SetMapper(mapper)
                     self.renderer_3d.AddActor(actor)
-                    self.renderer_top.AddActor(actor)
 
                     # Calculate Polydata
                     contourFilter = vtk.vtkContourFilter()
@@ -783,6 +781,8 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         # Set colors
         self._on_select_new_color()
 
+        self.render()
+
         return self.selectedData
 
     def addSelectionTo2DViewers(self, data, actor):
@@ -800,7 +800,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         #    # we already have this, thanks
         #    return
 
-        prop3D = vtk.vtkActor()
+        #prop3D = vtk.vtkActor()
 
         renderer = None
         if viewerIndex == 1:
@@ -845,7 +845,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             #color = self.sliceDirections.slice3dVWR._tdObjects.getObjectColour(
             #    contourObject)
 
-            actor.GetProperty().SetColor(self.frame.color_picker.GetColour().Get())
+            #actor.GetProperty().SetColor(self.frame.color_picker.GetColour().Get())
             actor.GetProperty().SetInterpolationToFlat()
 
             # add it to the renderer
@@ -891,7 +891,9 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         plane = cutter.GetCutFunction()
 
         # adjust the implicit plane (if we got this far (i.e.
+        print "normal: (" + str(slicerPlane.GetNormal()[0]) + ", " + str(slicerPlane.GetNormal()[1]) + ", "+ str(slicerPlane.GetNormal()[2]) + ")"
         plane.SetNormal(slicerPlane.GetNormal())
+        print "origin: (" + str(slicerPlane.GetOrigin()[0]) + ", " + str(slicerPlane.GetOrigin()[1]) + ", "+ str(slicerPlane.GetOrigin()[2]) + ")"
         plane.SetOrigin(slicerPlane.GetOrigin())
 
         # also make sure the transform knows about the new object position
