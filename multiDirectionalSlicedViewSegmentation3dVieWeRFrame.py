@@ -136,6 +136,18 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         continuous_box.Add(self.continuous_check, 0, wx.ALIGN_RIGHT)
         selection_box.Add(continuous_box)
 
+        #seedpoints
+        seedpoint_label = wx.StaticText(panel, -1, "Seedpoints" , wx.Point(0, 0))
+        seedpoint_label.SetFont(wx.Font(8, wx.DEFAULT, wx.NORMAL, wx.BOLD))
+        self.seedpoint_list = wx.ListCtrl(panel, size=(195,200), style=wx.LC_REPORT)
+        self.seedpoint_list.InsertColumn(0, 'X', width=44)
+        self.seedpoint_list.InsertColumn(1, 'Y', width=44)
+        self.seedpoint_list.InsertColumn(2, 'Z', width=44)
+        self.seedpoint_list.InsertColumn(3, 'ISO', width=50)
+        selection_box.Add((0,5), 0)
+        selection_box.Add(seedpoint_label)
+        selection_box.Add(self.seedpoint_list)
+
         #UNSELECTED
         unselected_box = wx.BoxSizer(wx.VERTICAL)
         

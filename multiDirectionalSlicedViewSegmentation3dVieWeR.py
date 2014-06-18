@@ -146,7 +146,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             # then bring it all the way up again to the view
             self.sync_module_view_with_logic()
 
-            self.seedPoints = []
+            self.clearSeedPoints()
             
         # END OF _INIT_FRAME
 
@@ -234,12 +234,28 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         evt.Skip()
 
     def _ipwEndInteractionCallback(self, viewer_id, event):
-        print "_ipwEndInteractionCallback "
         if not (self.controlIsCurrentlyDown):
-            self.seedPoints = []
-        self.seedPoints.append(self.tempCursorData)
+            self.clearSeedPoints()
+        self.addSeedPoint(self.tempCursorData)
 
         self._calculate_selection()
+
+    def clearSeedPoints(self):
+        """Method for clearing the seedpoint list
+        """
+        self.seedPoints = []
+        
+        self.frame.seedpoint_list.DeleteAllItems()
+
+    def addSeedPoint(self, point):
+        """Method for adding a point to the seedpoint list
+        """
+        self.seedPoints.append(point)
+
+        index = self.frame.seedpoint_list.InsertStringItem(0, str(point[0]).rstrip('0').rstrip('.'))
+        self.frame.seedpoint_list.SetStringItem(index, 1, str(point[1]).rstrip('0').rstrip('.'))
+        self.frame.seedpoint_list.SetStringItem(index, 2, str(point[2]).rstrip('0').rstrip('.'))
+        self.frame.seedpoint_list.SetStringItem(index, 3, str(point[3]).rstrip('0').rstrip('.'))
 
     def _on_scroll_viewer(self, event, viewer_id):
         if viewer_id == 1: # Top Viewer
