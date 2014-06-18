@@ -379,15 +379,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         if len(self.seedPoints) == 0:
             return
         else:  
-            self._calculate_selection()    
-
-    def _on_check_transparency_distance(self, event):
-        """Handler for checkbox adjustment (Unselected transparency by distance)
-        """        
-        if len(self.seedPoints) == 0:
-            return
-        else:  
-            return #TODO    
+            self._calculate_selection()
 
     def _on_clicked_btn_new_file(self, event):
         """Handler for file opening
@@ -483,18 +475,21 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                 posY = 0
                 posZ = 1
                 cam.SetPosition(posX, posY, posZ) 
+                cam.SetFocalPoint(0, 0, 0)
             elif(viewerIndex == 2):
                 cam.SetViewUp(0, 1 ,0)
                 posX = 1
                 posY = 0
                 posZ = 0
                 cam.SetPosition(posX, posY, posZ) 
+                cam.SetFocalPoint(0, 0, 0)
             elif(viewerIndex ==3):
                 cam.SetViewUp(0,1,0)
                 posX = 0
                 posY = -1
                 posZ = 0
-                cam.SetPosition(posX, posY, posZ) 
+                cam.SetPosition(posX, posY, posZ)
+                cam.SetFocalPoint(0, 0, 0) 
             if(viewerIndex == 4):
                 cam.SetViewUp(0, 1, 0)
                 fp = cam.GetFocalPoint()
@@ -510,7 +505,8 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                 cam.SetFocalPoint(0, 99999999, 0)  #Look towards infinity
                 cam.SetPosition(posX, posY, posZ)
                 cam.SetViewUp(0, 1, 0)
-            print("Setting camera " + str(viewerIndex) + " to (" + str(posX) + ", " + str(posY) + ", " + str(posZ) + ")") 
+
+            #print("Setting camera " + str(viewerIndex) + " to (" + str(posX) + ", " + str(posY) + ", " + str(posZ) + ")")
 
             # first reset the camera
             renderer.ResetCamera()
@@ -555,12 +551,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             self._update_indicators()
 
             self.render()
-            return #TODO
-
-    def _reset_zoomers(self):
-        """Handler for setting the camera zoomers to standard
-        """
-        return #TODO
+            return
 
     def _update_indicators(self):
         """Handler for updating all indicators
@@ -630,7 +621,6 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             self._update_3d_renderer(input_stream)
 
             self._reset_all_viewers()
-            self._reset_zoomers()
             # end of function _handleImageDataInput()
 
         if not(input_stream == None):
@@ -649,7 +639,6 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                     if self.frame._get_filename() == None:
                         self.frame._set_filename('FROM NETWORK')
                     self._reset_all_viewers()
-                    self._reset_zoomers()
             else:
                 print "ERROR: input_stream isn't vtkImageData!"
         else:

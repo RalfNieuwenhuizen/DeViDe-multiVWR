@@ -146,10 +146,11 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         self.seedpoint_list.InsertColumn(2, 'Y', width=44, format=wx.LIST_FORMAT_RIGHT)
         self.seedpoint_list.InsertColumn(3, 'Z', width=44, format=wx.LIST_FORMAT_RIGHT)
         self.seedpoint_list.InsertColumn(4, 'ISO', width=50, format=wx.LIST_FORMAT_RIGHT)
+        self.seedpoint_button = wx.Button(panel, label="Delete selected seedpoints")
+        
         selection_box.Add((0,5), 0)
         selection_box.Add(seedpoint_label)
         selection_box.Add(self.seedpoint_list, 1, wx.ALIGN_CENTER)
-        self.seedpoint_button = wx.Button(panel, label="Delete selected seedpoints")
         selection_box.Add((0,5), 0)
         selection_box.Add(self.seedpoint_button, 0, wx.ALIGN_CENTER)
 
