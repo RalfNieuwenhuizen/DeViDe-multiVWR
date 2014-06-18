@@ -271,6 +271,9 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         points = self.frame.seedpoint_list
         count = points.GetSelectedItemCount()
 
+        if count <= 0:
+            return
+
         while (count > 0) :
             itemIndex = points.GetFirstSelected()
             
