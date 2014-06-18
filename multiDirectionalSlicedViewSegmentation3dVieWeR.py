@@ -215,7 +215,10 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         frame.file_button.Bind(wx.EVT_BUTTON, self._on_clicked_btn_new_file) 
 
         # bind onClickSaveSnapshotButton
-        frame.save_button.Bind(wx.EVT_BUTTON, self._save_snapshot)    
+        frame.save_button.Bind(wx.EVT_BUTTON, self._save_snapshot)  
+
+        # bind onClickRemoveSeedPointsButtom
+        frame.seedpoint_button.Bind(wx.EVT_BUTTON, self.removeSeedPoints)  
 
     def _ipwStartInteractionCallback(self, viewer_id):
         # print "_ipwStartInteractionCallback " + str(viewer_id)
@@ -255,11 +258,35 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         """
         self.seedPoints.append(point)
 
-        index = self.frame.seedpoint_list.InsertStringItem(0, str(point[0]).rstrip('0').rstrip('.'))
+        index = len(self.seedPoints) - 1
+
+        self.frame.seedpoint_list.InsertStringItem(index, str(point[0]).rstrip('0').rstrip('.'))
         self.frame.seedpoint_list.SetStringItem(index, 1, str(point[1]).rstrip('0').rstrip('.'))
         self.frame.seedpoint_list.SetStringItem(index, 2, str(point[2]).rstrip('0').rstrip('.'))
         self.frame.seedpoint_list.SetStringItem(index, 3, str(point[3]).rstrip('0').rstrip('.'))
 
+    def removeSeedPoints(self, event):
+        """Event method call to remove selected seedpoints from list
+        """        
+        points = self.frame.seedpoint_list
+        count = points.GetSelectedItemCount()
+
+        while (count > 0) :
+            itemIndex = points.GetFirstSelected()
+            
+            #recreate point to be able to remove from array             
+            point = []
+            for i in range(0,points.GetColumnCount()):
+                point.append(float(points.GetItem(itemIndex, i).GetText()))
+
+            #delete item
+            self.seedPoints.remove(point)
+            points.DeleteItem(itemIndex)
+            count -= 1
+
+        self._reset_viewer(4)
+
+       
     def _on_scroll_viewer(self, event, viewer_id):
         if viewer_id == 1: # Top Viewer
             return # TODO
