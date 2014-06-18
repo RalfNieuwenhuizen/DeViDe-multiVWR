@@ -80,6 +80,9 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             # predefine this
             self.selectedData = []
 
+            # list of objects that want to be contoured by this slice
+            self._contourObjectsDict = {}
+
             # anything you stuff into self._config will be saved
             self._config.last_used_dir = ''
 
@@ -705,57 +708,71 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                     # Save result
                     self.selectedData.append(data)
                     self.contour_selected_actors.append(actor)
+
+                    self.addSelectionTo2DViewers(data, actor)
                     #End for-loop
 
         else:
             for seedPoint in self.seedPoints:
-                iso_value = seedPoint[3]
+                if not seedPoint == None:
+                    iso_value = seedPoint[3]
 
-                # Setup Actor and Mapper
-                actor = vtk.vtkActor()
-                mapper = vtk.vtkPolyDataMapper()
-                mapper.ScalarVisibilityOff()
-                actor.SetMapper(mapper)
-                #self.renderer_top.AddActor(actor)
-                #self.renderer_side.AddActor(actor)
-                #self.renderer_front.AddActor(actor)
-                self.renderer_3d.AddActor(actor)
+                    # Setup Actor and Mapper
+                    actor = vtk.vtkActor()
+                    mapper = vtk.vtkPolyDataMapper()
+                    mapper.ScalarVisibilityOff()
+                    actor.SetMapper(mapper)
+                    #self.renderer_top.AddActor(actor)
+                    #self.renderer_side.AddActor(actor)
+                    #self.renderer_front.AddActor(actor)
+                    self.renderer_3d.AddActor(actor)
 
-                # Calculate Polydata
-                contourFilter = vtk.vtkContourFilter()
-                contourFilter.SetInput(self._inputs[0]['inputData'])
-                contourFilter.GenerateValues(contourFilter.GetNumberOfContours(), iso_value + self.frame.lower_slider.GetValue(), iso_value + self.frame.upper_slider.GetValue())
-                contourFilter.Update()
+                    # Calculate Polydata
+                    contourFilter = vtk.vtkContourFilter()
+                    contourFilter.SetInput(self._inputs[0]['inputData'])
+                    contourFilter.GenerateValues(contourFilter.GetNumberOfContours(), iso_value + self.frame.lower_slider.GetValue(), iso_value + self.frame.upper_slider.GetValue())
+                    contourFilter.Update()
 
-                # Set output to mapper
-                data = contourFilter.GetOutput()
-                mapper.SetInput(data)
-                mapper.Update()
+                    # Set output to mapper
+                    data = contourFilter.GetOutput()
+                    mapper.SetInput(data)
+                    mapper.Update()
 
-                # Save result
-                self.selectedData.append(data)
-                self.contour_selected_actors.append(actor)
+                    # Save result
+                    self.selectedData.append(data)
+                    self.contour_selected_actors.append(actor)
 
-        #Add contoursto 2dViewers
-        prop3D = None
-        self.addContourObject(prop3D)
+                    self.addSelectionTo2DViewers(data, actor)
 
         # Set colors
         self._on_select_new_color()
 
         return self.selectedData
 
-    def addContourObject(self, prop3D):
+    def addSelectionTo2DViewers(self, data, actor):
+        self.addContourObject(1, data, actor)
+        self.addContourObject(2, data, actor)
+        self.addContourObject(3, data, actor)
+
+    def addContourObject(self, viewerIndex, contourObject, prop3D):
         """Activate contouring for the contourObject.  The contourObject
         is usually a tdObject and specifically a vtkPolyData.  We also
         need the prop3D that represents this polydata in the 3d scene.
         """
-        contourObject = self.selectedData
-
         #TODO include this to show selection in 2d renders
         #if self._contourObjectsDict.has_key(contourObject):
         #    # we already have this, thanks
         #    return
+
+        prop3D = vtk.vtkActor()
+
+        renderer = None
+        if viewerIndex == 1:
+            renderer = self.renderer_top
+        elif viewerIndex == 2:
+            renderer = self.renderer_side
+        elif viewerIndex == 3:
+            renderer = self.renderer_front
 
         try:
             contourable = contourObject.IsA('vtkPolyData')
@@ -796,9 +813,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             actor.GetProperty().SetInterpolationToFlat()
 
             # add it to the renderer
-            self.renderer_top.AddActor(actor)
-            self.renderer_side.AddActor(actor)
-            self.renderer_front.AddActor(actor)
+            renderer.AddActor(actor)
             
             # add all necessary metadata to our dict
             contourDict = {'contourObject' : contourObject,
@@ -810,9 +825,45 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             self._contourObjectsDict[contourObject] = contourDict
 
             # now sync the bugger
-            self.syncContourToObject(contourObject)
+            self.syncContourToObject(viewerIndex, contourObject)
         else:
             print "Error: polyData is not Contourable!!!"
+
+    def syncContourToObject(self, viewerIndex, contourObject):
+        """Update the contour for the given contourObject.  contourObject
+        corresponds to a tdObject in tdObjects.py.
+        """
+        # yes, in and not in work on dicts, doh
+        if contourObject not in self._contourObjectsDict:
+            print "Error!! contourObject not in _contourobjects!"
+            return
+        else:
+            print "syncContourToObject!"
+
+
+        slicerPlane = None
+        if viewerIndex == 1:
+           slicerPlane = self.slice_viewer_top.ipws[0]
+        elif viewerIndex == 2:
+            slicerPlane = self.slice_viewer_side.ipws[0]
+        elif viewerIndex == 3:
+            slicerPlane = self.slice_viewer_front.ipws[0]
+
+        # get the contourObject metadata
+        contourDict = self._contourObjectsDict[contourObject]
+        cutter = contourDict['cutter']
+        plane = cutter.GetCutFunction()
+
+        # adjust the implicit plane (if we got this far (i.e.
+        plane.SetNormal(slicerPlane.GetNormal())
+        plane.SetOrigin(slicerPlane.GetOrigin())
+
+        # also make sure the transform knows about the new object position
+        contourDict['trfmFilter'].GetTransform().SetMatrix(
+            contourDict['contourObjectProp'].GetMatrix())
+        
+        # calculate it
+        cutter.Update()
 
     ###################################################################################
     #   _____ _______ ____  _____    _____  ______          _____ _____ _   _  _____  #
