@@ -81,7 +81,9 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             self.selectedData = []
 
             # list of objects that want to be contoured by this slice
-            self._contourObjectsDict = {}
+            self._contourObjectsDict1 = {}
+            self._contourObjectsDict2 = {}
+            self._contourObjectsDict3 = {}
 
             # anything you stuff into self._config will be saved
             self._config.last_used_dir = ''
@@ -626,7 +628,9 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             
             self.selectedData = [] 
             self.contour_selected_actors = []
-            self._contourObjectsDict = {}
+            self._contourObjectsDict1 = {}
+            self._contourObjectsDict2 = {}
+            self._contourObjectsDict3 = {}
             self.clearSeedPoints()
 
             #set the input on the 2d slice viewers
@@ -698,6 +702,9 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         # initial cleanup
         self.selectedData = []
         self.contour_selected_actors = []
+        self._contourObjectsDict1 = {}
+        self._contourObjectsDict2 = {}
+        self._contourObjectsDict3 = {}
 
         if self.frame.continuous_check.GetValue():
             for seed_point in self.seedPoints:
@@ -865,6 +872,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             actor.GetProperty().SetInterpolationToFlat()
 
             # add it to the renderer
+            self.contour_selected_actors.append(actor)
             renderer.AddActor(actor)
             
             # add all necessary metadata to our dict
@@ -874,7 +882,13 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                            'cutter' : cutter,
                            'tdActor' : actor}
 
-            self._contourObjectsDict[contourObject] = contourDict
+            if viewerIndex == 1:
+                self._contourObjectsDict1[contourObject] = contourDict
+            elif viewerIndex == 2:
+                self._contourObjectsDict2[contourObject] = contourDict
+            elif viewerIndex == 3:
+                self._contourObjectsDict3[contourObject] = contourDict
+            
 
             # now sync the bugger
             self.syncContourToObject(viewerIndex, contourObject)
@@ -886,23 +900,26 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         corresponds to a tdObject in tdObjects.py.
         """
         # yes, in and not in work on dicts, doh
-        if contourObject not in self._contourObjectsDict:
-            print "Error!! contourObject not in _contourobjects!"
-            return
-        else:
-            print "syncContourToObject!"
+        #if contourObject not in self._contourObjectsDict:
+        #    print "Error!! contourObject not in _contourobjects!"
+        #    return
+        #else:
+        #    print "syncContourToObject!"
 
 
         slicerPlane = None
+        contourDict = None
         if viewerIndex == 1:
-           slicerPlane = self.slice_viewer_top.ipws[0]
+            slicerPlane = self.slice_viewer_top.ipws[0]
+            contourDict = self._contourObjectsDict1[contourObject]
         elif viewerIndex == 2:
             slicerPlane = self.slice_viewer_side.ipws[0]
+            contourDict = self._contourObjectsDict2[contourObject]
         elif viewerIndex == 3:
             slicerPlane = self.slice_viewer_front.ipws[0]
+            contourDict = self._contourObjectsDict3[contourObject]
 
         # get the contourObject metadata
-        contourDict = self._contourObjectsDict[contourObject]
         cutter = contourDict['cutter']
         plane = cutter.GetCutFunction()
 
