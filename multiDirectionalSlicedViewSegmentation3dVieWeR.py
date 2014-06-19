@@ -179,9 +179,6 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         self.slice_viewer_front.ipws[0].AddObserver('EndInteractionEvent', lambda e, o: self._ipwEndInteractionCallback(3, e))
 
         # bind onScrollViewer
-        #frame.slice_viewer_top.Unbind(wx.EVT_MOUSEWHEEL)
-        #frame.slice_viewer_side.Unbind(wx.EVT_MOUSEWHEEL)
-        #frame.slice_viewer_front.Unbind(wx.EVT_MOUSEWHEEL)
         frame.view3d.Unbind(wx.EVT_MOUSEWHEEL)
         frame.view3d.Bind(wx.EVT_MOUSEWHEEL, lambda evt: self._on_scroll_viewer(evt, 4))  
 
@@ -223,7 +220,6 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
     def _ipwStartInteractionCallback(self, viewer_id):
         """Method for handling seedpoint selection in the ipw
         """
-        # print "_ipwStartInteractionCallback " + str(viewer_id)
         self.tempCursorData = None
         self._ipwInteractionCallback(viewer_id)
 
@@ -298,11 +294,11 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
        
     def _on_scroll_viewer(self, event, viewer_id):
         if viewer_id == 1: # Top Viewer
-            return # TODO
+            return
         elif viewer_id == 2: # Side Viewer
-            return # TODO
+            return
         elif viewer_id == 3: # Front Viewer
-            return # TODO
+            return
         elif viewer_id == 4: # 3D Viewer
             # event.GetWheelRotation() is + or - 120 depending on
             # direction of turning.
@@ -335,9 +331,13 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                 sd.delta_slice(-delta)
 
         self.render()
-        #self.ipws[0].InvokeEvent('InteractionEvent')
 
     def _on_slide_slice(self, event, viewer_id):
+        """Handler for zoomer interaction (sliders on 2D views)
+        """
+        if self._inputs[0]['inputData'] == None:
+            return
+
         sv = None
         slicer_max = 0
         if viewer_id == 1: # Top Viewer
