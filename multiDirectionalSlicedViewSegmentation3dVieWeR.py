@@ -934,9 +934,6 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         # calculate it
         cutter.Update()
 
-        print "Cutter: Number of contours: " + str(cutter.GetNumberOfContours())
-        print "Actor:  of contours: " + str(cutter.GetNumberOfContours())
-
     ###################################################################################
     #   _____ _______ ____  _____    _____  ______          _____ _____ _   _  _____  #
     #  / ____|__   __/ __ \|  __ \  |  __ \|  ____|   /\   |  __ \_   _| \ | |/ ____| #
