@@ -852,7 +852,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             actor.GetProperty().SetInterpolationToFlat()
 
             # add it to the renderer
-            renderer.AddActor(prop3D)
+            renderer.AddActor(actor)
             
             # add all necessary metadata to our dict
             contourDict = {'contourObject' : contourObject,
