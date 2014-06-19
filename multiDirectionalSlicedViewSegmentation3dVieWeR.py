@@ -135,9 +135,9 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             om.SetInput(frame.view3d._outline_source.GetOutput())
             frame.view3d._outline_actor = vtk.vtkActor()
             frame.view3d._outline_actor.SetMapper(om)
-            frame.view3d._orientation_widget.On()  
             frame.view3d._cInteractorStyle = vtk.vtkInteractorStyleTrackballCamera()
             frame.view3d.SetInteractorStyle(frame.view3d._cInteractorStyle)
+            frame.view3d._orientation_widget.On()  
 
             # make our window appear (this is a viewer after all)
             self.view()
@@ -489,7 +489,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             elif(viewerIndex ==3):
                 cam.SetViewUp(0,1,0)
                 posX = 0
-                posY = -1
+                posY = 1
                 posZ = 0
                 cam.SetPosition(posX, posY, posZ)
                 cam.SetFocalPoint(0, 0, 0) 
@@ -507,7 +507,6 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
 
                 cam.SetFocalPoint(0, 99999999, 0)  #Look towards infinity
                 cam.SetPosition(posX, posY, posZ)
-                cam.SetViewUp(0, 1, 0)
 
             #print("Setting camera " + str(viewerIndex) + " to (" + str(posX) + ", " + str(posY) + ", " + str(posZ) + ")")
 

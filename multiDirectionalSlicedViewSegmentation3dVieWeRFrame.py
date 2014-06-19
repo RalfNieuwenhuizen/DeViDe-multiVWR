@@ -315,25 +315,11 @@ class multiDirectionalSlicedViewSegmentation3dVieWeRFrame(wx.Frame):
         """setup orientation widget stuff, the axes in the bottom
         """
         view3d._orientation_widget = vtk.vtkOrientationMarkerWidget()
-        
-        view3d._annotated_cube_actor = aca = vtk.vtkAnnotatedCubeActor()
-
-        aca.GetXMinusFaceProperty().SetColor(1,0,0)
-        aca.GetXPlusFaceProperty().SetColor(1,0,0)
-        aca.GetYMinusFaceProperty().SetColor(0,1,0)
-        aca.GetYPlusFaceProperty().SetColor(0,1,0)
-        aca.GetZMinusFaceProperty().SetColor(0,0,1)
-        aca.GetZPlusFaceProperty().SetColor(0,0,1)
-        
+                
         view3d._axes_actor = vtk.vtkAxesActor()
 
-        view3d._orientation_widget.SetInteractor(view3d)
         view3d._orientation_widget.SetOrientationMarker(view3d._axes_actor)
-        view3d._orientation_widget.On()
-       
-        # make sure interaction is off; when on, interaction with
-        # software raycasters is greatly slowed down!
-        view3d._orientation_widget.InteractiveOff()
+        view3d._orientation_widget.SetInteractor(view3d)
 
     def _reset_controls(self, event = None):
         """Method to set the standard values on the controls.
