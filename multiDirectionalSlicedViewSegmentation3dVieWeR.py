@@ -221,11 +221,15 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         frame.seedpoint_button.Bind(wx.EVT_BUTTON, self.removeSeedPoints)  
 
     def _ipwStartInteractionCallback(self, viewer_id):
+        """Method for handling seedpoint selection in the ipw
+        """
         # print "_ipwStartInteractionCallback " + str(viewer_id)
         self.tempCursorData = None
         self._ipwInteractionCallback(viewer_id)
 
     def _ipwInteractionCallback(self, viewer_id):
+        """Method for handling seedpoint selection in the ipw
+        """
         cd = 4 * [0.0]
         if viewer_id == 1 and self.slice_viewer_top.ipws[0].GetCursorData(cd):
             self.tempCursorData = cd
@@ -235,11 +239,14 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             self.tempCursorData = cd
 
     def onLeftUp(self, evt):
-        # print "leftUP!!" + str(evt.ControlDown())
+        """Method for handling seedpoint selection in the ipw
+        """
         self.controlIsCurrentlyDown = evt.ControlDown()
         evt.Skip()
 
     def _ipwEndInteractionCallback(self, viewer_id, event):
+        """Method for handling seedpoint selection in the ipw
+        """
         if not (self.controlIsCurrentlyDown):
             self.clearSeedPoints()
         self.addSeedPoint(self.tempCursorData)
@@ -249,8 +256,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
     def clearSeedPoints(self):
         """Method for clearing the seedpoint list
         """
-        self.seedPoints = []
-        
+        self.seedPoints = []        
         self.frame.seedpoint_list.DeleteAllItems()
 
     def addSeedPoint(self, point):
@@ -554,15 +560,8 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                 self._update_3d_renderer(self._inputs[0]['inputData'])
                 resetCamera(4)
 
-            self._update_indicators()
-
             self.render()
             return
-
-    def _update_indicators(self):
-        """Handler for updating all indicators
-        """
-        return #TODO
 
     def set_input(self, idx, input_stream):
         # this gets called right before you get executed.  take the
@@ -613,13 +612,11 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                 add_primary_init(input_stream)
                 if self.frame._get_filename() == None:
                     self.frame._set_filename('FROM NETWORK')
-
-                # reset everything, including ortho camera
-                #self._resetAll()
             
             self.selectedData = [] 
             self.contour_selected_actors = []
             self._contourObjectsDict = {}
+            self.clearSeedPoints()
 
             #set the input on the 2d slice viewers
             self._update_2d_renderers(input_stream)
