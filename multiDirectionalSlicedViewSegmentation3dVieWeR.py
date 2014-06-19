@@ -523,6 +523,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             return
         else:
             size = self._inputs[0]['inputData'].GetDimensions()
+            colorRange = self._inputs[0]['inputData'].GetScalarRange()
             if viewer_id == 1: # Top Viewer
                 self.top_zoomer_max = size[2]-1
                 self.frame.top_zoomer.SetMax(self.top_zoomer_max)
@@ -530,6 +531,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                 for i, ipw in enumerate(self.slice_viewer_top.ipws):
                         ipw.SetSliceIndex(0)
                 self.slice_viewer_top.ipws[0].SetPlaneOrientation(2)
+                self.slice_viewer_top.ipws[0].GetColorMap().GetLookupTable().SetRange(colorRange[0], colorRange[1])
                 resetCamera(1)
             elif viewer_id == 2: # Side Viewer
                 self.side_zoomer_max = size[0]-1
@@ -538,6 +540,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                 for i, ipw in enumerate(self.slice_viewer_side.ipws):
                         ipw.SetSliceIndex(0)
                 self.slice_viewer_side.ipws[0].SetPlaneOrientation(0)
+                self.slice_viewer_side.ipws[0].GetColorMap().GetLookupTable().SetRange(colorRange[0], colorRange[1])
                 resetCamera(2)
             elif viewer_id == 3: # Front Viewer
                 self.front_zoomer_max = size[1]-1
@@ -546,6 +549,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                 for i, ipw in enumerate(self.slice_viewer_front.ipws):
                         ipw.SetSliceIndex(0)
                 self.slice_viewer_front.ipws[0].SetPlaneOrientation(1)
+                self.slice_viewer_front.ipws[0].GetColorMap().GetLookupTable().SetRange(colorRange[0], colorRange[1])
                 resetCamera(3)
             elif viewer_id == 4: # 3D Viewer
                 self._update_3d_renderer(self._inputs[0]['inputData'])
