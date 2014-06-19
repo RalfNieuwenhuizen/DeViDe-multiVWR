@@ -187,6 +187,10 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         frame.side_zoomer.Bind(wx.EVT_SLIDER, lambda evt: self._on_slide_slice(evt, 2))
         frame.front_zoomer.Bind(wx.EVT_SLIDER, lambda evt: self._on_slide_slice(evt, 3))
 
+        frame.top_zoomer.Bind(wx.EVT_SCROLL_CHANGED, lambda evt: self._on_zoomer_released(evt, 1))
+        frame.side_zoomer.Bind(wx.EVT_SCROLL_CHANGED, lambda evt: self._on_zoomer_released(evt, 2))
+        frame.front_zoomer.Bind(wx.EVT_SCROLL_CHANGED, lambda evt: self._on_zoomer_released(evt, 3))
+
         # bind onChangeSliderToleranceLow
         frame.lower_slider.Bind(wx.EVT_SCROLL_CHANGED, self._on_slide_tolerance_low)
 
@@ -354,6 +358,13 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             value = slicer_max - event.GetEventObject().GetValue()
             sv.ipws[0].SetSliceIndex(value)
         self.render()
+
+    def _on_zoomer_released(self, event, viewerIndex):
+        """Handler for slider adjustment end (Zoomers)
+        """
+        for data in self.selectedData:
+            self.syncContourToObject(viewerIndex, data)
+
 
     def _on_slide_tolerance_low(self, event):
         """Handler for slider adjustment (Lower Threshold)
@@ -832,6 +843,8 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             cutter.SetInput(trfmFilter.GetOutput())
             stripper = vtk.vtkStripper()
             stripper.SetInput(cutter.GetOutput())
+
+            cutter.SetValue(0, 1) 
             
             #
             #tubef = vtk.vtkTubeFilter()
@@ -848,7 +861,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             #color = self.sliceDirections.slice3dVWR._tdObjects.getObjectColour(
             #    contourObject)
 
-            #actor.GetProperty().SetColor(self.frame.color_picker.GetColour().Get())
+            actor.GetProperty().SetColor(self.frame.color_picker.GetColour().Get())
             actor.GetProperty().SetInterpolationToFlat()
 
             # add it to the renderer
@@ -860,7 +873,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
                            'trfmFilter' : trfmFilter,
                            'cutter' : cutter,
                            'tdActor' : actor}
-                           
+
             self._contourObjectsDict[contourObject] = contourDict
 
             # now sync the bugger
@@ -894,9 +907,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         plane = cutter.GetCutFunction()
 
         # adjust the implicit plane (if we got this far (i.e.
-        print "normal: (" + str(slicerPlane.GetNormal()[0]) + ", " + str(slicerPlane.GetNormal()[1]) + ", "+ str(slicerPlane.GetNormal()[2]) + ")"
         plane.SetNormal(slicerPlane.GetNormal())
-        print "origin: (" + str(slicerPlane.GetOrigin()[0]) + ", " + str(slicerPlane.GetOrigin()[1]) + ", "+ str(slicerPlane.GetOrigin()[2]) + ")"
         plane.SetOrigin(slicerPlane.GetOrigin())
 
         # also make sure the transform knows about the new object position
@@ -905,6 +916,9 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         
         # calculate it
         cutter.Update()
+
+        print "Cutter: Number of contours: " + str(cutter.GetNumberOfContours())
+        print "Actor:  of contours: " + str(cutter.GetNumberOfContours())
 
     ###################################################################################
     #   _____ _______ ____  _____    _____  ______          _____ _____ _   _  _____  #
