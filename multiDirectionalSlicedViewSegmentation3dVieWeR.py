@@ -80,6 +80,8 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             # predefine this
             self.selectedData = []
 
+            self.controlIsCurrentlyDown = 0
+
             # list of objects that want to be contoured by this slice
             self._contourObjectsDict1 = {}
             self._contourObjectsDict2 = {}
@@ -508,7 +510,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             elif(viewerIndex ==3):
                 cam.SetViewUp(0,1,0)
                 posX = 0
-                posY = 1
+                posY = -1
                 posZ = 0
                 cam.SetPosition(posX, posY, posZ)
                 cam.SetFocalPoint(0, 0, 0) 
@@ -543,34 +545,37 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             size = self._inputs[0]['inputData'].GetDimensions()
             colorRange = self._inputs[0]['inputData'].GetScalarRange()
             if viewer_id == 1: # Top Viewer
-            	if(reset_zoom):
-	                self.top_zoomer_max = size[2]-1
-	                self.frame.top_zoomer.SetMax(self.top_zoomer_max)
-	                self.frame.top_zoomer.SetValue(self.top_zoomer_max)
-	                for i, ipw in enumerate(self.slice_viewer_top.ipws):
-	                        ipw.SetSliceIndex(0)
-	                self.slice_viewer_top.ipws[0].SetPlaneOrientation(2)
-	            	self.slice_viewer_top.ipws[0].GetColorMap().GetLookupTable().SetRange(colorRange[0], colorRange[1])
+                if(reset_zoom):
+                    self.top_zoomer_max = size[2]-1
+                    self.frame.top_zoomer.SetMax(self.top_zoomer_max)
+                    value = self.top_zoomer_max / 2
+                    self.frame.top_zoomer.SetValue(value)
+                    self.slice_viewer_top.ipws[0].SetPlaneOrientation(2)
+                    for i, ipw in enumerate(self.slice_viewer_top.ipws):
+                            ipw.SetSliceIndex(value)
+                            ipw.GetColorMap().GetLookupTable().SetRange(colorRange[0], colorRange[1])
                 resetCamera(1)
             elif viewer_id == 2: # Side Viewer
-            	if(reset_zoom):
-	                self.side_zoomer_max = size[0]-1
-	                self.frame.side_zoomer.SetMax(self.side_zoomer_max)
-	                self.frame.side_zoomer.SetValue(self.side_zoomer_max)
-	                for i, ipw in enumerate(self.slice_viewer_side.ipws):
-	                        ipw.SetSliceIndex(0)
-	                self.slice_viewer_side.ipws[0].SetPlaneOrientation(0)
-	                self.slice_viewer_side.ipws[0].GetColorMap().GetLookupTable().SetRange(colorRange[0], colorRange[1])
+                if(reset_zoom):
+                    self.side_zoomer_max = size[0]-1
+                    self.frame.side_zoomer.SetMax(self.side_zoomer_max)
+                    value = self.side_zoomer_max / 2
+                    self.frame.side_zoomer.SetValue(value)
+                    self.slice_viewer_side.ipws[0].SetPlaneOrientation(0)
+                    for i, ipw in enumerate(self.slice_viewer_side.ipws):
+                            ipw.SetSliceIndex(value)
+                            ipw.GetColorMap().GetLookupTable().SetRange(colorRange[0], colorRange[1])
                 resetCamera(2)
             elif viewer_id == 3: # Front Viewer
-            	if(reset_zoom):
-	                self.front_zoomer_max = size[1]-1
-	                self.frame.front_zoomer.SetMax(self.front_zoomer_max)
-	                self.frame.front_zoomer.SetValue(self.front_zoomer_max)
-	                for i, ipw in enumerate(self.slice_viewer_front.ipws):
-	                        ipw.SetSliceIndex(0)
-	                self.slice_viewer_front.ipws[0].SetPlaneOrientation(1)
-	                self.slice_viewer_front.ipws[0].GetColorMap().GetLookupTable().SetRange(colorRange[0], colorRange[1])
+                if(reset_zoom):
+                    self.front_zoomer_max = size[1]-1
+                    self.frame.front_zoomer.SetMax(self.front_zoomer_max)
+                    value = self.front_zoomer_max / 2
+                    self.frame.front_zoomer.SetValue(value)
+                    self.slice_viewer_front.ipws[0].SetPlaneOrientation(1)
+                    for i, ipw in enumerate(self.slice_viewer_front.ipws):
+                            ipw.SetSliceIndex(value)
+                            ipw.GetColorMap().GetLookupTable().SetRange(colorRange[0], colorRange[1])
                 resetCamera(3)
             elif viewer_id == 4: # 3D Viewer
                 self._update_3d_renderer(self._inputs[0]['inputData'])
@@ -931,10 +936,14 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         plane.SetNormal(slicerPlane.GetNormal())
         plane.SetOrigin(slicerPlane.GetOrigin())
 
+        # hack to turn around normal for front-view.
+        if viewerIndex == 3:
+            normal = slicerPlane.GetNormal()
+            plane.SetNormal((-normal[0], -normal[1], -normal[2]))
+
         # also make sure the transform knows about the new object position
-        contourDict['trfmFilter'].GetTransform().SetMatrix(
-            contourDict['contourObjectProp'].GetMatrix())
-        
+        contourDict['trfmFilter'].GetTransform().SetMatrix(contourDict['contourObjectProp'].GetMatrix())
+
         # calculate it
         cutter.Update()
 
