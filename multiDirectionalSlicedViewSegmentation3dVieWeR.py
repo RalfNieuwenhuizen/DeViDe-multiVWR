@@ -209,10 +209,10 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
         frame.continuous_check.Bind(wx.EVT_CHECKBOX, self._on_check_continuous)
 
         # bind onClickresetViewer
-        frame.reset_top.Bind(wx.EVT_BUTTON, lambda x: self._reset_viewer(1))
-        frame.reset_side.Bind(wx.EVT_BUTTON, lambda x: self._reset_viewer(2))
-        frame.reset_front.Bind(wx.EVT_BUTTON, lambda x: self._reset_viewer(3))
-        frame.reset_view3d.Bind(wx.EVT_BUTTON, lambda x: self._reset_viewer(4))
+        frame.reset_top.Bind(wx.EVT_BUTTON, lambda x: self._reset_viewer(1, False))
+        frame.reset_side.Bind(wx.EVT_BUTTON, lambda x: self._reset_viewer(2, False))
+        frame.reset_front.Bind(wx.EVT_BUTTON, lambda x: self._reset_viewer(3, False))
+        frame.reset_view3d.Bind(wx.EVT_BUTTON, lambda x: self._reset_viewer(4, False))
 
         # bind onClickFileButton
         frame.file_button.Bind(wx.EVT_BUTTON, self._on_clicked_btn_new_file) 
@@ -295,7 +295,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             points.DeleteItem(itemIndex)
             count -= 1
 
-        self._reset_viewer(4)
+        self._reset_viewer(4, False)
 
        
     def _on_scroll_viewer(self, event, viewer_id):
@@ -464,12 +464,12 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
     def _reset_all_viewers(self, event = None):
         """Handler for resetting all viewer
         """        
-        self._reset_viewer(1)
-        self._reset_viewer(2)
-        self._reset_viewer(3)
-        self._reset_viewer(4)
+        self._reset_viewer(1, True)
+        self._reset_viewer(2, True)
+        self._reset_viewer(3, True)
+        self._reset_viewer(4, True)
 
-    def _reset_viewer(self, viewer_id, event = None):
+    def _reset_viewer(self, viewer_id, reset_zoom, event = None):
         """Handler for resetting a specific viewer
         """
         def resetCamera(viewerIndex):
@@ -543,31 +543,34 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             size = self._inputs[0]['inputData'].GetDimensions()
             colorRange = self._inputs[0]['inputData'].GetScalarRange()
             if viewer_id == 1: # Top Viewer
-                self.top_zoomer_max = size[2]-1
-                self.frame.top_zoomer.SetMax(self.top_zoomer_max)
-                self.frame.top_zoomer.SetValue(self.top_zoomer_max)
-                for i, ipw in enumerate(self.slice_viewer_top.ipws):
-                        ipw.SetSliceIndex(0)
-                self.slice_viewer_top.ipws[0].SetPlaneOrientation(2)
-                self.slice_viewer_top.ipws[0].GetColorMap().GetLookupTable().SetRange(colorRange[0], colorRange[1])
+            	if(reset_zoom):
+	                self.top_zoomer_max = size[2]-1
+	                self.frame.top_zoomer.SetMax(self.top_zoomer_max)
+	                self.frame.top_zoomer.SetValue(self.top_zoomer_max)
+	                for i, ipw in enumerate(self.slice_viewer_top.ipws):
+	                        ipw.SetSliceIndex(0)
+	                self.slice_viewer_top.ipws[0].SetPlaneOrientation(2)
+	            	self.slice_viewer_top.ipws[0].GetColorMap().GetLookupTable().SetRange(colorRange[0], colorRange[1])
                 resetCamera(1)
             elif viewer_id == 2: # Side Viewer
-                self.side_zoomer_max = size[0]-1
-                self.frame.side_zoomer.SetMax(self.side_zoomer_max)
-                self.frame.side_zoomer.SetValue(self.side_zoomer_max)
-                for i, ipw in enumerate(self.slice_viewer_side.ipws):
-                        ipw.SetSliceIndex(0)
-                self.slice_viewer_side.ipws[0].SetPlaneOrientation(0)
-                self.slice_viewer_side.ipws[0].GetColorMap().GetLookupTable().SetRange(colorRange[0], colorRange[1])
+            	if(reset_zoom):
+	                self.side_zoomer_max = size[0]-1
+	                self.frame.side_zoomer.SetMax(self.side_zoomer_max)
+	                self.frame.side_zoomer.SetValue(self.side_zoomer_max)
+	                for i, ipw in enumerate(self.slice_viewer_side.ipws):
+	                        ipw.SetSliceIndex(0)
+	                self.slice_viewer_side.ipws[0].SetPlaneOrientation(0)
+	                self.slice_viewer_side.ipws[0].GetColorMap().GetLookupTable().SetRange(colorRange[0], colorRange[1])
                 resetCamera(2)
             elif viewer_id == 3: # Front Viewer
-                self.front_zoomer_max = size[1]-1
-                self.frame.front_zoomer.SetMax(self.front_zoomer_max)
-                self.frame.front_zoomer.SetValue(self.front_zoomer_max)
-                for i, ipw in enumerate(self.slice_viewer_front.ipws):
-                        ipw.SetSliceIndex(0)
-                self.slice_viewer_front.ipws[0].SetPlaneOrientation(1)
-                self.slice_viewer_front.ipws[0].GetColorMap().GetLookupTable().SetRange(colorRange[0], colorRange[1])
+            	if(reset_zoom):
+	                self.front_zoomer_max = size[1]-1
+	                self.frame.front_zoomer.SetMax(self.front_zoomer_max)
+	                self.frame.front_zoomer.SetValue(self.front_zoomer_max)
+	                for i, ipw in enumerate(self.slice_viewer_front.ipws):
+	                        ipw.SetSliceIndex(0)
+	                self.slice_viewer_front.ipws[0].SetPlaneOrientation(1)
+	                self.slice_viewer_front.ipws[0].GetColorMap().GetLookupTable().SetRange(colorRange[0], colorRange[1])
                 resetCamera(3)
             elif viewer_id == 4: # 3D Viewer
                 self._update_3d_renderer(self._inputs[0]['inputData'])
@@ -774,6 +777,7 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
             for seedPoint in self.seedPoints:
                 if not seedPoint == None:
                     iso_value = seedPoint[3]
+                    #print "working on seedpoint with iso" + str(iso_value)
 
                     # Setup Actor and Mapper
                     actor = vtk.vtkActor()
