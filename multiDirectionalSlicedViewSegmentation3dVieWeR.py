@@ -168,6 +168,8 @@ class multiDirectionalSlicedViewSegmentation3dVieWeR(IntrospectModuleMixin, Modu
 
         #CONTROL check
         frame.top.Bind(wx.EVT_LEFT_UP, self.onLeftUp)
+        frame.side.Bind(wx.EVT_LEFT_UP, self.onLeftUp)
+        frame.front.Bind(wx.EVT_LEFT_UP, self.onLeftUp)
 
         # bind onClickedAViewer
         self.slice_viewer_top.ipws[0].AddObserver('StartInteractionEvent', lambda e, o: self._ipwStartInteractionCallback(1))
